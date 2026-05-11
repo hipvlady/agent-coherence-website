@@ -16,9 +16,11 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://agent-coherence.dev/">
   <meta property="og:image" content="https://agent-coherence.dev/og-image.png">
+  <meta property="og:image:secure_url" content="https://agent-coherence.dev/og-image.png">
+  <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="agent-coherence: the coherence layer for multi-agent LLM systems">
+  <meta property="og:image:alt" content="agent-coherence: when agents share state, one of them is reading a stale copy">
   <meta property="og:site_name" content="agent-coherence">
   <meta property="og:locale" content="en_US">
 
@@ -26,32 +28,142 @@
   <meta name="twitter:title" content="agent-coherence — Detect stale reads in multi-agent LLM systems">
   <meta name="twitter:description" content="When agents share state, one is reading stale. agent-coherence makes it visible and serves the fresh version on the next read.">
   <meta name="twitter:image" content="https://agent-coherence.dev/og-image.png">
+  <meta name="twitter:image:alt" content="agent-coherence: when agents share state, one of them is reading a stale copy">
 
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="alternate icon" href="/favicon.svg">
+  <link rel="mask-icon" href="/favicon.svg" color="#5eead4">
+  <link rel="apple-touch-icon" href="/favicon.svg">
+
   <meta name="theme-color" content="#0a0a0a">
+  <meta name="color-scheme" content="dark light">
+  <meta name="application-name" content="agent-coherence">
+  <meta name="apple-mobile-web-app-title" content="agent-coherence">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="generator" content="agent-coherence.dev">
+
+  <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+  <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cal.com">
+
+  <link rel="alternate" type="application/json" title="llms.txt" href="/llms.txt">
 
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "SoftwareSourceCode",
-    "name": "agent-coherence",
-    "alternateName": "ccs",
-    "description": "Detects stale reads in multi-agent LLM systems and serves the fresh version on the next read instead of rebroadcasting. MESI-style cache coherence across LangGraph, CrewAI, and AutoGen. Vendor-neutral.",
-    "url": "https://agent-coherence.dev",
-    "codeRepository": "https://github.com/hipvlady/agent-coherence",
-    "programmingLanguage": "Python",
-    "operatingSystem": "Cross-platform",
-    "applicationCategory": "DeveloperApplication",
-    "license": "https://www.apache.org/licenses/LICENSE-2.0",
-    "author": {
-      "@type": "Person",
-      "name": "Vladyslav Parakhin",
-      "email": "contact@agent-coherence.dev"
-    },
-    "keywords": "multi-agent, LLM, cache coherence, MESI, token optimization, LangGraph, CrewAI, AutoGen",
-    "downloadUrl": "https://pypi.org/project/agent-coherence/",
-    "softwareVersion": "0.7"
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://agent-coherence.dev/#website",
+        "url": "https://agent-coherence.dev/",
+        "name": "agent-coherence",
+        "description": "Detect stale reads in multi-agent LLM systems. Serve the fresh version on the next read instead of rebroadcasting.",
+        "inLanguage": "en-US",
+        "publisher": { "@id": "https://agent-coherence.dev/#author" }
+      },
+      {
+        "@type": "Person",
+        "@id": "https://agent-coherence.dev/#author",
+        "name": "Vladyslav Parakhin",
+        "email": "contact@agent-coherence.dev",
+        "url": "https://agent-coherence.dev/",
+        "sameAs": [
+          "https://github.com/hipvlady",
+          "https://arxiv.org/a/parakhin_v_1"
+        ]
+      },
+      {
+        "@type": "SoftwareSourceCode",
+        "@id": "https://agent-coherence.dev/#software",
+        "name": "agent-coherence",
+        "alternateName": "ccs",
+        "description": "Detects stale reads in multi-agent LLM systems and serves the fresh version on the next read instead of rebroadcasting. MESI-style cache coherence across LangGraph, CrewAI, AutoGen, and custom orchestrators. Vendor-neutral across Anthropic, OpenAI, Google, Mistral, and open-source models.",
+        "url": "https://agent-coherence.dev",
+        "codeRepository": "https://github.com/hipvlady/agent-coherence",
+        "programmingLanguage": ["Python"],
+        "runtimePlatform": "Python 3.10+",
+        "operatingSystem": "Cross-platform",
+        "applicationCategory": "DeveloperApplication",
+        "applicationSubCategory": "Multi-agent LLM coordination",
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "author": { "@id": "https://agent-coherence.dev/#author" },
+        "maintainer": { "@id": "https://agent-coherence.dev/#author" },
+        "keywords": "multi-agent LLM, stale-read detection, cache coherence, MESI, agent observability, LangGraph, CrewAI, AutoGen, agent state consistency, token optimization",
+        "downloadUrl": "https://pypi.org/project/agent-coherence/",
+        "softwareVersion": "0.7",
+        "softwareRequirements": "Python 3.10+",
+        "releaseNotes": "https://github.com/hipvlady/agent-coherence/releases",
+        "discussionUrl": "https://github.com/hipvlady/agent-coherence/discussions",
+        "sameAs": [
+          "https://github.com/hipvlady/agent-coherence",
+          "https://pypi.org/project/agent-coherence/",
+          "https://arxiv.org/abs/2603.15183"
+        ]
+      },
+      {
+        "@type": "ScholarlyArticle",
+        "@id": "https://arxiv.org/abs/2603.15183",
+        "name": "agent-coherence: a MESI-derived coherence protocol for shared artifacts in multi-agent LLM systems",
+        "url": "https://arxiv.org/abs/2603.15183",
+        "author": { "@id": "https://agent-coherence.dev/#author" },
+        "isPartOf": { "@type": "Periodical", "name": "arXiv" }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://agent-coherence.dev/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is a stale read in a multi-agent system?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "When one agent reads an artifact (a plan, a document, a result) that another agent has already updated, the reader gets a stale copy. Most frameworks don't track who has the latest version, so agents either re-read everything every turn (expensive) or quietly use outdated data (a debugging black hole). agent-coherence detects that exact moment."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How is agent-coherence different from LangSmith or Braintrust?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "LangSmith and Braintrust show you what your agents did. agent-coherence shows you when one of them was wrong because it read stale state from another. The difference is structural: we track per-agent ownership of shared artifacts (MESI states), so the tool can flag a read that returned an outdated copy. Trace-only tools cannot detect this because they lack the state model."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I have to switch frameworks or model providers to use agent-coherence?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Drop-in adapters ship for LangGraph (CCSStore), CrewAI, AutoGen, and any custom orchestrator via CoherenceAdapterCore. The protocol operates on artifacts, not model responses, so behavior is identical with Anthropic, OpenAI, Google, Mistral, AWS Bedrock, Azure OpenAI, and open-source models."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What happens when two agents try to write to the same artifact?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The protocol enforces single-writer exclusivity. Only one agent holds write permission at a time; concurrent writes are prevented at the protocol level, not 'resolved' by an append-only reducer that produces duplicates or unexpected list nesting. For workloads where concurrent writes are semantically composable, CRDTs are the right tool — see the Why Coherence Matters doc for the layered model."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How much does agent-coherence save on token costs, and on what workloads?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "69% token reduction on read-heavy workloads (12:1 read/write ratio), 47% on moderate workloads (8:3), 29% on write-heavy workloads (8:4). The mechanism is replacing full-artifact rebroadcasts with ~12-token invalidation signals. Benchmarks reproduce in CI without live LLM API calls: pip install \"agent-coherence[langgraph,benchmark]\" then make benchmark."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is agent-coherence production-ready?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Apache-2.0, on PyPI, 165 tests, TLA+/TLC model-checked safety properties (single-writer, monotonic versioning, no torn reads), PyPI Trusted Publishers with PEP 740 attestations and CycloneDX SBOM published with every release. Opt-in crash-recovery sweep reclaims stale grants when agents OOM-kill or livelock. ccs-diagnose runs as a zero-network static analyzer on existing graphs before adoption."
+            }
+          }
+        ]
+      }
+    ]
   }
   </script>
 
@@ -342,6 +454,41 @@
     }
     @media (max-width: 640px) { .trust-list { grid-template-columns: 1fr; } }
 
+    /* FAQ */
+    .faq-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      padding: 18px 22px;
+    }
+    .faq-item h3 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.2px;
+    }
+    .faq-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .faq-item p a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent-dim); }
+    .faq-item p a:hover { border-bottom-style: solid; }
+    .faq-item p code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+
     /* Code block */
     pre.code {
       background: var(--code-bg);
@@ -420,7 +567,7 @@
       </div>
 
       <div class="ctas">
-        <a class="btn primary" href="https://cal.com/agent-coherence" rel="noopener" data-cta="book-a-call">Book a 15-min call →</a>
+        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=launch" rel="noopener" data-cta="book-a-call">Book a 15-min call →</a>
         <a class="btn" href="https://github.com/hipvlady/agent-coherence" rel="noopener" data-cta="github">View on GitHub</a>
         <a class="btn" href="https://arxiv.org/abs/2603.15183" rel="noopener" data-cta="paper">Read the paper</a>
       </div>
@@ -531,6 +678,45 @@ graph = builder.compile(store=store)</pre>
     </div>
   </section>
 
+  <section id="faq">
+    <div class="container">
+      <h2>Common questions.</h2>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <h3>What is a stale read in a multi-agent system?</h3>
+          <p>When one agent reads an artifact — a plan, a document, a result — that another agent has already updated, the reader gets a stale copy. Most frameworks don't track who has the latest version, so agents either re-read everything every turn (expensive) or quietly use outdated data (a debugging black hole). agent-coherence detects that exact moment.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>How is this different from LangSmith or Braintrust?</h3>
+          <p>LangSmith and Braintrust show you what your agents did. agent-coherence shows you when one of them was wrong because it read stale state from another. The difference is structural — we track per-agent ownership of shared artifacts (MESI states), so the tool can flag a read that returned an outdated copy. Trace-only tools cannot detect this because they lack the state model.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Do I have to switch frameworks or model providers?</h3>
+          <p>No. Drop-in adapters ship for LangGraph (<code>CCSStore</code>), CrewAI, AutoGen, and any custom orchestrator via <code>CoherenceAdapterCore</code>. The protocol operates on artifacts, not model responses, so it works the same with Anthropic, OpenAI, Google, Mistral, AWS Bedrock, Azure OpenAI, and open-source models.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>What happens when two agents try to write to the same artifact?</h3>
+          <p>The protocol enforces single-writer exclusivity. Only one agent holds write permission at a time; concurrent writes are prevented at the protocol level, not "resolved" by an append-only reducer that produces duplicates or unexpected list nesting. For workloads where concurrent writes are semantically composable, CRDTs are the right tool — see the <a href="https://github.com/hipvlady/agent-coherence/blob/main/docs/why-coherence-matters.md" rel="noopener">Why Coherence Matters</a> doc for the layered model.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>How much does it actually save, and on what kind of workload?</h3>
+          <p>69% token reduction on read-heavy workloads (12:1 read/write ratio), 47% on moderate (8:3), 29% on write-heavy (8:4). The lever is invalidation signals (~12 tokens) replacing full-artifact rebroadcasts. Run the benchmarks yourself: <code>pip install "agent-coherence[langgraph,benchmark]"</code> then <code>make benchmark</code>. CI uses <code>GenericFakeChatModel</code> — no live API calls required.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Is it production-ready?</h3>
+          <p>Apache-2.0, on PyPI, 165 tests, TLA+/TLC model-checked safety properties (single-writer, monotonic versioning, no torn reads), PyPI Trusted Publishers with PEP 740 attestations and CycloneDX SBOM published with every release. Opt-in crash-recovery sweep reclaims stale grants when agents OOM-kill or livelock. <code>ccs-diagnose</code> runs as a zero-network static analyzer on existing graphs before adoption.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <section id="cta">
     <div class="container">
       <div class="cta-strip">
@@ -538,7 +724,7 @@ graph = builder.compile(store=store)</pre>
           <h3>Have a multi-agent system burning tokens on shared state?</h3>
           <p>15-minute call. We'll look at your graph and tell you whether agent-coherence will move the number.</p>
         </div>
-        <a class="btn primary" href="https://cal.com/agent-coherence" rel="noopener" data-cta="book-a-call-bottom">Book a call →</a>
+        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_bottom&utm_campaign=launch" rel="noopener" data-cta="book-a-call-bottom">Book a call →</a>
       </div>
     </div>
   </section>

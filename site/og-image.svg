@@ -7,11 +7,11 @@
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
 
-  <!-- Decorative coherence diagram (top right) -->
+  <!-- Decorative coherence diagram (top right): two agents reading one artifact -->
   <g opacity="0.45">
     <circle cx="980" cy="120" r="34" fill="none" stroke="#5eead4" stroke-width="3"/>
     <circle cx="1100" cy="120" r="34" fill="none" stroke="#5eead4" stroke-width="3"/>
-    <circle cx="1040" cy="220" r="34" fill="none" stroke="#5eead4" stroke-width="3"/>
+    <circle cx="1040" cy="220" r="34" fill="#5eead4" fill-opacity="0.15" stroke="#5eead4" stroke-width="3"/>
     <path d="M1014 120 H1066" stroke="#5eead4" stroke-width="3" stroke-linecap="round"/>
     <path d="M995 145 L1025 195" stroke="#5eead4" stroke-width="3" stroke-linecap="round"/>
     <path d="M1085 145 L1055 195" stroke="#5eead4" stroke-width="3" stroke-linecap="round"/>
@@ -23,15 +23,15 @@
   </text>
 
   <!-- Headline -->
-  <text x="80" y="260" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="68" font-weight="700" fill="#e8e8ea" letter-spacing="-2">
-    <tspan x="80" dy="0">The coherence layer for</tspan>
-    <tspan x="80" dy="80">multi-agent LLM systems.</tspan>
+  <text x="80" y="240" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="60" font-weight="700" fill="#e8e8ea" letter-spacing="-1.8">
+    <tspan x="80" dy="0">When agents share state,</tspan>
+    <tspan x="80" dy="72">one of them is reading a</tspan>
+    <tspan x="80" dy="72"><tspan fill="#5eead4">stale</tspan> copy.</tspan>
   </text>
 
   <!-- Subhead -->
-  <text x="80" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="30" font-weight="400" fill="#9095a0">
-    <tspan x="80" dy="0">Cut shared-artifact token costs</tspan>
-    <tspan x="80" dy="44"><tspan fill="#5eead4" font-weight="700">29–69%</tspan> across LangGraph, CrewAI, AutoGen.</tspan>
+  <text x="80" y="490" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="400" fill="#9095a0">
+    agent-coherence makes it visible — across LangGraph, CrewAI, AutoGen.
   </text>
 
   <!-- Footer strip -->

@@ -1,0 +1,5 @@
+Contact: mailto:contact@agent-coherence.dev
+Expires: 2027-05-11T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://agent-coherence.dev/.well-known/security.txt
+Policy: https://github.com/hipvlady/agent-coherence/blob/main/SECURITY.md

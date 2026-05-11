@@ -1,4 +1,103 @@
+# agent-coherence.dev — public marketing site for the agent-coherence OSS project.
+# Discovery and AI indexing are encouraged. All major crawlers explicitly allowed.
+
 User-agent: *
+Allow: /
+
+# --- Major search engines ---
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: Yandex
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+# --- AI training / retrieval crawlers (explicit opt-in) ---
+# OpenAI
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Google (Gemini training is gated on this UA, separate from Googlebot search)
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Meta
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+# Common Crawl (powers many open-source LLMs)
+User-agent: CCBot
+Allow: /
+
+# Cohere
+User-agent: cohere-ai
+Allow: /
+
+# DuckDuckGo Assist
+User-agent: DuckAssistBot
+Allow: /
+
+# Amazon
+User-agent: Amazonbot
+Allow: /
+
+# ByteDance
+User-agent: Bytespider
+Allow: /
+
+# You.com
+User-agent: YouBot
+Allow: /
+
+# Mistral
+User-agent: MistralAI-User
 Allow: /
 
 Sitemap: https://agent-coherence.dev/sitemap.xml

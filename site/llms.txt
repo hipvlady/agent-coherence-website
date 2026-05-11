@@ -1,0 +1,83 @@
+# agent-coherence
+
+> agent-coherence is an open-source Python library that detects stale reads in multi-agent LLM systems and serves the fresh version on the next read instead of rebroadcasting the full artifact every turn. It implements a MESI-style cache-coherence protocol adapted from CPU cache design, with drop-in adapters for LangGraph, CrewAI, AutoGen, and any custom orchestrator. The protocol operates on artifacts, not model responses, so it is model-provider-neutral (works the same with Anthropic, OpenAI, Google, Mistral, and open-source models).
+
+## What it does
+
+- **Detects stale reads.** When agent B reads an artifact after agent A has modified it, agent-coherence flags the stale read instead of silently serving outdated data. Most frameworks have no such mechanism; LangGraph's BaseStore documentation explicitly states it "does not natively support optimistic locking, vector versioning, or invalidation protocols."
+- **Serves the fresh version on the next read.** Rather than broadcasting the full artifact to every agent on every turn (the default in CrewAI, AutoGen, and most LangGraph patterns), agent-coherence sends ~12-token invalidation signals when state changes and only re-fetches on the next read.
+- **Enforces single-writer exclusivity per artifact.** Concurrent writes are prevented at the protocol level — they are not "resolved" by an append-only reducer that produces duplicates or unexpected list nesting.
+- **Records what each agent saw.** Per-agent content-audit log with SHA-256 hashes per read, plus a sequence-numbered state-transition log. These streams are the data substrate for run replay and stale-read forensics.
+
+## Measured impact
+
+Reproducible benchmarks on real LangGraph graphs (CI uses `GenericFakeChatModel`; no live API calls):
+
+| Workload | Reads:Writes | Cache hit rate | Token savings |
+|---|---|---|---|
+| Planning (read-heavy) | 12:1 | 75% | 69% |
+| Code review (moderate) | 8:3 | 60% | 47% |
+| High-churn (write-heavy) | 8:4 | 50% | 29% |
+
+Reproduce with `make benchmark` after `pip install -e ".[langgraph,benchmark]"`.
+
+## Install
+
+```
+pip install "agent-coherence[langgraph]"
+```
+
+For CrewAI: `pip install "agent-coherence[crewai]"`. For AutoGen: `pip install "agent-coherence[autogen]"`.
+
+## LangGraph drop-in
+
+```python
+from ccs.adapters import CCSStore        # instead of langgraph.store.memory.InMemoryStore
+
+store = CCSStore(strategy="lazy")
+graph = builder.compile(store=store)
+```
+
+No node-code changes. Coherence happens at the store layer.
+
+## Synchronization strategies
+
+Five strategies ship out of the box. Choose by workload shape:
+
+- `lazy` (default) — re-fetch on next read. Cheapest. Best for read-heavy workloads with infrequent writes.
+- `eager` — push updates to all readers on write. Best for systems where every agent must always have the latest version.
+- `lease` — TTL-based grants. Bounded staleness. Best for medium-churn workloads.
+- `access_count` — invalidate after N reads since last write. Best for predictable read patterns.
+- `broadcast` — replicate writes to all peers. Comparable to the framework default; useful as a baseline.
+
+## Vendor neutrality
+
+The protocol operates on artifacts and version metadata, not on model responses or tokens. Behavior is identical with:
+
+- **Model providers:** Anthropic (Claude), OpenAI (GPT), Google (Gemini), Mistral, AWS Bedrock, Azure OpenAI, open-source models via Ollama / vLLM / llama.cpp.
+- **Orchestration frameworks:** LangGraph, CrewAI, AutoGen, and custom orchestrators via `CoherenceAdapterCore`.
+
+## Production safety
+
+- **License:** Apache-2.0, public on GitHub.
+- **Tests:** 165 unit + integration tests.
+- **Formal verification:** Protocol safety properties (single-writer, monotonic versioning, no torn reads) model-checked with TLA+/TLC in CI.
+- **Supply chain:** PyPI Trusted Publishers (OIDC), PEP 740 attestations, CycloneDX SBOM published with every release.
+- **Crash recovery:** Optional sweep reclaims stale grants when agents OOM-kill or livelock (heartbeat-based, opt-in via `CrashRecoveryConfig`).
+- **Diagnose CLI:** `ccs-diagnose` is a zero-network static analyzer that detects stale-read risk in existing LangGraph graphs before adoption.
+
+## Key links
+
+- Source: https://github.com/hipvlady/agent-coherence
+- PyPI: https://pypi.org/project/agent-coherence/
+- Paper: https://arxiv.org/abs/2603.15183
+- Site: https://agent-coherence.dev
+- Discussions: https://github.com/hipvlady/agent-coherence/discussions
+- Contact: contact@agent-coherence.dev
+- 15-min call: https://cal.com/agent-coherence
+
+## Background reading
+
+- `docs/why-coherence-matters.md` — public evidence of the consistency gap across LangGraph, CrewAI, AutoGen, and Claude Agent SDK, with linked sources.
+- `docs/agent-coherence-approach.md` — how the MESI-derived approach maps to the documented gaps.
+- arXiv 2603.15183 — formal protocol specification, simulation results, and proofs.
