@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>agent-coherence — Coherence layer for multi-agent LLM systems</title>
+
+  <meta name="description" content="Cut shared-artifact token costs 29–69% across LangGraph, CrewAI, and AutoGen with MESI cache coherence. Vendor-neutral, framework-agnostic, Apache-2.0.">
+  <meta name="keywords" content="multi-agent LLM, LangGraph optimization, cache coherence, MESI, agent token costs, CCSStore, CrewAI, AutoGen, agent observability, langgraph cache, multi-agent framework">
+  <meta name="author" content="Vladyslav Parakhin">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://agent-coherence.dev/">
+
+  <meta property="og:title" content="agent-coherence — Coherence layer for multi-agent LLM systems">
+  <meta property="og:description" content="Cut shared-artifact token costs 29–69% across LangGraph, CrewAI, and AutoGen with MESI cache coherence. One import change. Vendor-neutral.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://agent-coherence.dev/">
+  <meta property="og:image" content="https://agent-coherence.dev/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="agent-coherence: the coherence layer for multi-agent LLM systems">
+  <meta property="og:site_name" content="agent-coherence">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="agent-coherence — Coherence layer for multi-agent LLM systems">
+  <meta name="twitter:description" content="Cut shared-artifact token costs 29–69% across LangGraph, CrewAI, and AutoGen with MESI cache coherence.">
+  <meta name="twitter:image" content="https://agent-coherence.dev/og-image.png">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate icon" href="/favicon.svg">
+  <meta name="theme-color" content="#0a0a0a">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "agent-coherence",
+    "alternateName": "ccs",
+    "description": "MESI-style cache coherence for shared artifacts in multi-agent LLM systems. Cuts shared-artifact token costs 29–69% across LangGraph, CrewAI, and AutoGen.",
+    "url": "https://agent-coherence.dev",
+    "codeRepository": "https://github.com/hipvlady/agent-coherence",
+    "programmingLanguage": "Python",
+    "operatingSystem": "Cross-platform",
+    "applicationCategory": "DeveloperApplication",
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "author": {
+      "@type": "Person",
+      "name": "Vladyslav Parakhin",
+      "email": "contact@agent-coherence.dev"
+    },
+    "keywords": "multi-agent, LLM, cache coherence, MESI, token optimization, LangGraph, CrewAI, AutoGen",
+    "downloadUrl": "https://pypi.org/project/agent-coherence/",
+    "softwareVersion": "0.7"
+  }
+  </script>
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJ3C5FZX64"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-NJ3C5FZX64', { anonymize_ip: true });
+  </script>
+
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #131418;
+      --surface-2: #1a1c22;
+      --border: #262830;
+      --text: #e8e8ea;
+      --muted: #9095a0;
+      --accent: #5eead4;
+      --accent-dim: #14b8a6;
+      --code-bg: #11131a;
+      --max-width: 920px;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --surface: #f7f8fa;
+        --surface-2: #eef0f4;
+        --border: #e1e4ea;
+        --text: #1a1d24;
+        --muted: #5a626e;
+        --accent: #0d9488;
+        --accent-dim: #14b8a6;
+        --code-bg: #f4f5f8;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    code, pre {
+      font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 14px;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    h1, h2, h3 { line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; }
+    h1 { font-size: 2.75rem; margin: 0 0 0.5rem; }
+    h2 { font-size: 1.75rem; margin: 4rem 0 1rem; }
+    h3 { font-size: 1.125rem; margin: 0 0 0.5rem; }
+    p { margin: 0 0 1rem; }
+    p.lead { font-size: 1.25rem; color: var(--muted); line-height: 1.5; }
+
+    /* Header / nav */
+    header.site {
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    header.site .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .brand {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+    }
+    .brand .dot { color: var(--accent); }
+    nav.site a {
+      color: var(--muted);
+      margin-left: 20px;
+      font-size: 0.9rem;
+    }
+    nav.site a:hover { color: var(--text); text-decoration: none; }
+
+    /* Hero */
+    section.hero { padding: 72px 0 24px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+    .badge .ver { color: var(--accent); }
+    .ctas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: var(--surface);
+      transition: all 0.15s ease;
+    }
+    .btn:hover { background: var(--surface-2); text-decoration: none; }
+    .btn.primary {
+      background: var(--accent);
+      color: #06231f;
+      border-color: var(--accent);
+    }
+    .btn.primary:hover { background: var(--accent-dim); }
+    .install {
+      margin-top: 28px;
+      padding: 16px 20px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .install code {
+      color: var(--text);
+      background: transparent;
+      padding: 0;
+      font-size: 0.95rem;
+    }
+    .install code .prompt { color: var(--muted); }
+    .install code .pkg { color: var(--accent); }
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+    .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    /* Stat strip */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 56px 0 24px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .stat .num {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .stat .label {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-top: 4px;
+    }
+    @media (max-width: 640px) {
+      .stats { grid-template-columns: 1fr; }
+      h1 { font-size: 2rem; }
+      p.lead { font-size: 1.1rem; }
+    }
+
+    /* Benchmarks table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: var(--surface);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    td.savings { color: var(--accent); font-weight: 700; }
+
+    /* 3-col how-it-works */
+    .cols-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 24px;
+    }
+    .col-card {
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .col-card .icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--surface-2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+    @media (max-width: 720px) { .cols-3 { grid-template-columns: 1fr; } }
+
+    /* Frameworks grid */
+    .frameworks {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .fw {
+      padding: 16px 20px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      font-size: 0.95rem;
+    }
+    .fw strong { color: var(--text); }
+    .fw .meta { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+    @media (max-width: 640px) { .frameworks { grid-template-columns: 1fr; } }
+
+    /* Trust list */
+    .trust-list {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0 0;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .trust-list li {
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      font-size: 0.9rem;
+    }
+    .trust-list .tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      font-weight: 700;
+      margin-right: 8px;
+    }
+    @media (max-width: 640px) { .trust-list { grid-template-columns: 1fr; } }
+
+    /* Code block */
+    pre.code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      overflow-x: auto;
+      font-size: 0.875rem;
+      line-height: 1.55;
+      color: var(--text);
+      margin: 16px 0 24px;
+    }
+    pre.code .cm { color: var(--muted); }
+    pre.code .kw { color: #c084fc; }
+    pre.code .str { color: var(--accent); }
+
+    /* CTA strip */
+    .cta-strip {
+      margin: 56px 0 24px;
+      padding: 32px 28px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .cta-strip h3 { margin: 0; font-size: 1.25rem; }
+    .cta-strip p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; }
+
+    /* Footer */
+    footer.site {
+      margin-top: 64px;
+      padding: 32px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+    footer.site .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    footer.site a { color: var(--muted); margin-left: 18px; }
+    footer.site a:hover { color: var(--text); }
+    footer.site nav a:first-child { margin-left: 0; }
+  </style>
+</head>
+<body>
+
+  <header class="site">
+    <div class="container">
+      <div class="brand">agent-coherence<span class="dot">.</span></div>
+      <nav class="site">
+        <a href="#benchmarks">Benchmarks</a>
+        <a href="#how">How it works</a>
+        <a href="#frameworks">Frameworks</a>
+        <a href="https://github.com/hipvlady/agent-coherence" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <span class="badge">v<span class="ver">0.7</span> · Apache-2.0 · PyPI</span>
+      <h1>The coherence layer for multi-agent LLM systems.</h1>
+      <p class="lead">Cut shared-artifact token costs <strong>29–69%</strong> across LangGraph, CrewAI, and AutoGen with MESI-style cache coherence. Vendor-neutral, framework-agnostic, one import change.</p>
+
+      <div class="install">
+        <code><span class="prompt">$</span> pip install <span class="pkg">"agent-coherence[langgraph]"</span></code>
+        <button class="copy-btn" data-copy='pip install "agent-coherence[langgraph]"'>Copy</button>
+      </div>
+
+      <div class="ctas">
+        <a class="btn primary" href="https://cal.com/agent-coherence" rel="noopener" data-cta="book-a-call">Book a 15-min call →</a>
+        <a class="btn" href="https://github.com/hipvlady/agent-coherence" rel="noopener" data-cta="github">View on GitHub</a>
+        <a class="btn" href="https://arxiv.org/abs/2603.15183" rel="noopener" data-cta="paper">Read the paper</a>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="num">69%</div>
+          <div class="label">token reduction on read-heavy workloads</div>
+        </div>
+        <div class="stat">
+          <div class="num">~12</div>
+          <div class="label">tokens per invalidation, vs full artifact rebroadcast</div>
+        </div>
+        <div class="stat">
+          <div class="num">$18K</div>
+          <div class="label">/year saved on one 1,000-runs/day code-review workload</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="benchmarks">
+    <div class="container">
+      <h2>Measured on real LangGraph graphs.</h2>
+      <p class="lead">Reproducible in CI with <code>GenericFakeChatModel</code> — no live LLM API calls. Run them yourself: <code>make benchmark</code>.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Workload</th>
+            <th>Agents</th>
+            <th>Reads : Writes</th>
+            <th>Hit rate</th>
+            <th>Savings</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Planning (read-heavy)</td><td>4</td><td>12:1</td><td>75%</td><td class="savings">69%</td></tr>
+          <tr><td>Code review (moderate)</td><td>3</td><td>8:3</td><td>60%</td><td class="savings">47%</td></tr>
+          <tr><td>High-churn (write-heavy)</td><td>4</td><td>8:4</td><td>50%</td><td class="savings">29%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="container">
+      <h2>How it works.</h2>
+      <p class="lead">MESI cache coherence — the protocol every modern CPU uses to share memory — adapted for LLM agents sharing artifacts.</p>
+
+      <div class="cols-3">
+        <div class="col-card">
+          <div class="icon">1</div>
+          <h3>Local cache per agent</h3>
+          <p>Each shared artifact is cached locally per agent. Reads serve from the local cache when fresh — no re-broadcast.</p>
+        </div>
+        <div class="col-card">
+          <div class="icon">2</div>
+          <h3>Lightweight invalidation</h3>
+          <p>Writes commit to a coordinator, which sends ~12-token invalidation signals instead of rebroadcasting the full artifact.</p>
+        </div>
+        <div class="col-card">
+          <div class="icon">3</div>
+          <h3>Bounded staleness</h3>
+          <p>Single-writer-multiple-reader per artifact with bounded staleness. Peers re-fetch on next read, guaranteed.</p>
+        </div>
+      </div>
+
+      <p style="margin-top:24px;">Five synchronization strategies ship out of the box: <code>lazy</code> (default), <code>eager</code>, <code>lease</code> (TTL-based), <code>access_count</code>, and <code>broadcast</code> — pick the one matching your workload's read/write ratio and freshness needs.</p>
+    </div>
+  </section>
+
+  <section id="frameworks">
+    <div class="container">
+      <h2>Works with the stack you already have.</h2>
+      <p class="lead">Same library, same protocol, same behavior — regardless of orchestrator or model provider.</p>
+
+      <div class="frameworks">
+        <div class="fw"><strong>LangGraph</strong><div class="meta">Drop-in <code>CCSStore</code> — one import change, no node code changes</div></div>
+        <div class="fw"><strong>CrewAI</strong><div class="meta"><code>CrewAIAdapter(strategy_name="lazy")</code></div></div>
+        <div class="fw"><strong>AutoGen</strong><div class="meta"><code>AutoGenAdapter(strategy_name="lazy")</code></div></div>
+        <div class="fw"><strong>Custom orchestrators</strong><div class="meta">Framework-agnostic <code>CoherenceAdapterCore</code></div></div>
+      </div>
+
+      <pre class="code"><span class="cm"># LangGraph drop-in — one import change, no node code changes</span>
+<span class="kw">from</span> langgraph.store.memory <span class="kw">import</span> InMemoryStore  <span class="cm"># before</span>
+<span class="kw">from</span> ccs.adapters <span class="kw">import</span> CCSStore                  <span class="cm"># after</span>
+
+store = CCSStore(strategy=<span class="str">"lazy"</span>)
+graph = builder.compile(store=store)</pre>
+
+      <p>Provider-neutral: same behavior with <strong>Anthropic, OpenAI, Google, Mistral, or open-source models</strong>. The protocol operates on artifacts, not model responses.</p>
+    </div>
+  </section>
+
+  <section id="trust">
+    <div class="container">
+      <h2>Built for production-grade trust.</h2>
+
+      <ul class="trust-list">
+        <li><span class="tag">Open</span>Apache-2.0 license, public on <a href="https://github.com/hipvlady/agent-coherence" rel="noopener">GitHub</a></li>
+        <li><span class="tag">Verified</span>Protocol safety properties model-checked with TLA+/TLC in CI</li>
+        <li><span class="tag">Published</span><a href="https://arxiv.org/abs/2603.15183" rel="noopener">arXiv 2603.15183</a> — formal protocol and simulation results</li>
+        <li><span class="tag">Supply chain</span>PyPI Trusted Publishers (OIDC), PEP 740 attestations, CycloneDX SBOM</li>
+        <li><span class="tag">Diagnose</span><code>ccs-diagnose</code> — zero-network stale-read detector for existing graphs</li>
+        <li><span class="tag">Recovery</span>Crash-recovery sweep reclaims stale grants when agents OOM-kill or livelock</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="cta">
+    <div class="container">
+      <div class="cta-strip">
+        <div>
+          <h3>Have a multi-agent system burning tokens on shared state?</h3>
+          <p>15-minute call. We'll look at your graph and tell you whether agent-coherence will move the number.</p>
+        </div>
+        <a class="btn primary" href="https://cal.com/agent-coherence" rel="noopener" data-cta="book-a-call-bottom">Book a call →</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site">
+    <div class="container">
+      <div>© <span id="year">2026</span> agent-coherence · Apache-2.0</div>
+      <nav>
+        <a href="https://github.com/hipvlady/agent-coherence" rel="noopener">GitHub</a>
+        <a href="https://pypi.org/project/agent-coherence/" rel="noopener">PyPI</a>
+        <a href="https://arxiv.org/abs/2603.15183" rel="noopener">arXiv</a>
+        <a href="https://github.com/hipvlady/agent-coherence/discussions" rel="noopener">Discussions</a>
+        <a href="mailto:contact@agent-coherence.dev">contact@agent-coherence.dev</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const text = btn.getAttribute('data-copy');
+        navigator.clipboard.writeText(text).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = orig; }, 1500);
+          if (window.gtag) gtag('event', 'copy_install', { text });
+        });
+      });
+    });
+    document.querySelectorAll('[data-cta]').forEach(el => {
+      el.addEventListener('click', () => {
+        if (window.gtag) gtag('event', 'cta_click', { cta: el.getAttribute('data-cta') });
+      });
+    });
+  </script>
+</body>
+</html>
