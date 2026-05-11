@@ -203,7 +203,7 @@
       }
     }
     * { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif;
@@ -233,29 +233,66 @@
 
     /* Header / nav */
     header.site {
-      padding: 24px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 0;
+      background: rgba(10, 10, 10, 0.78);
+      backdrop-filter: saturate(180%) blur(14px);
+      -webkit-backdrop-filter: saturate(180%) blur(14px);
       border-bottom: 1px solid var(--border);
+    }
+    @media (prefers-color-scheme: light) {
+      header.site { background: rgba(255, 255, 255, 0.78); }
     }
     header.site .container {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
+      gap: 24px;
     }
     .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
       font-weight: 700;
       color: var(--text);
-      font-size: 1rem;
+      font-size: 1.02rem;
       letter-spacing: -0.01em;
+      flex-shrink: 0;
+    }
+    .brand:hover { text-decoration: none; color: var(--text); }
+    .brand-logo {
+      width: 22px;
+      height: 22px;
+      color: var(--accent);
+      flex-shrink: 0;
     }
     .brand .dot { color: var(--accent); }
+    nav.site {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      flex: 1;
+      justify-content: center;
+    }
     nav.site a {
       color: var(--muted);
-      margin-left: 20px;
-      font-size: 0.9rem;
+      font-size: 0.92rem;
+      margin: 0;
+      transition: color 0.15s ease;
     }
     nav.site a:hover { color: var(--text); text-decoration: none; }
+    .header-cta {
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+    @media (max-width: 760px) {
+      nav.site { display: none; }
+      header.site { padding: 12px 0; }
+      .header-cta { padding: 7px 14px; font-size: 0.85rem; }
+    }
 
     /* Hero */
     section.hero { padding: 72px 0 24px; }
@@ -456,38 +493,65 @@
 
     /* FAQ */
     .faq-list {
-      display: grid;
-      gap: 14px;
-      margin-top: 18px;
+      margin-top: 28px;
+      border-top: 1px solid var(--border);
     }
     .faq-item {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--surface);
-      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
     }
-    .faq-item h3 {
-      margin: 0 0 8px;
+    .faq-item > summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 22px 4px;
       font-size: 1.05rem;
       font-weight: 600;
       color: var(--text);
       letter-spacing: -0.2px;
+      transition: color 0.15s ease;
     }
-    .faq-item p {
+    .faq-item > summary::-webkit-details-marker { display: none; }
+    .faq-item > summary:hover { color: var(--accent); }
+    .faq-item > summary::after {
+      content: "";
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      background-image:
+        linear-gradient(currentColor, currentColor),
+        linear-gradient(currentColor, currentColor);
+      background-position: center, center;
+      background-size: 100% 1.5px, 1.5px 100%;
+      background-repeat: no-repeat;
+      color: var(--muted);
+      transition: transform 0.2s ease, color 0.15s ease;
+    }
+    .faq-item[open] > summary { color: var(--text); }
+    .faq-item[open] > summary::after {
+      transform: rotate(45deg);
+      color: var(--accent);
+    }
+    .faq-item > p {
       margin: 0;
+      padding: 0 4px 22px;
       color: var(--muted);
       font-size: 0.95rem;
-      line-height: 1.6;
+      line-height: 1.65;
+      max-width: 760px;
     }
-    .faq-item p a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent-dim); }
-    .faq-item p a:hover { border-bottom-style: solid; }
-    .faq-item p code {
+    .faq-item > p a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent-dim); }
+    .faq-item > p a:hover { border-bottom-style: solid; }
+    .faq-item > p code {
       background: var(--code-bg);
       border: 1px solid var(--border);
       padding: 1px 6px;
       border-radius: 4px;
       font-size: 0.85em;
     }
+    #faq .lead { margin-bottom: 0; }
 
     /* Code block */
     pre.code {
@@ -545,13 +609,25 @@
 
   <header class="site">
     <div class="container">
-      <div class="brand">agent-coherence<span class="dot">.</span></div>
-      <nav class="site">
-        <a href="#benchmarks">Benchmarks</a>
-        <a href="#how">How it works</a>
+      <a class="brand" href="/" aria-label="agent-coherence home">
+        <svg class="brand-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="6" cy="7" r="2.6" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="18" cy="7" r="2.6" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="12" cy="18" r="2.6" fill="currentColor" stroke="currentColor" stroke-width="1.6"/>
+          <line x1="8.6" y1="7" x2="15.4" y2="7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="7.3" y1="9.2" x2="11" y2="15.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="16.7" y1="9.2" x2="13" y2="15.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <span>agent-coherence<span class="dot">.</span></span>
+      </a>
+      <nav class="site" aria-label="Primary">
+        <a href="#how">How</a>
         <a href="#frameworks">Frameworks</a>
+        <a href="#benchmarks">Benchmarks</a>
+        <a href="#faq">FAQ</a>
         <a href="https://github.com/hipvlady/agent-coherence" rel="noopener">GitHub</a>
       </nav>
+      <a class="btn primary header-cta" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_header&utm_campaign=launch" rel="noopener" data-cta="book-a-call-header">Book a call</a>
     </div>
   </header>
 
@@ -680,38 +756,39 @@ graph = builder.compile(store=store)</pre>
 
   <section id="faq">
     <div class="container">
-      <h2>Common questions.</h2>
+      <h2>Frequently asked questions.</h2>
+      <p class="lead">Common questions about stale-read detection and multi-agent coherence across LangGraph, CrewAI, AutoGen, and custom orchestrators.</p>
       <div class="faq-list">
 
-        <div class="faq-item">
-          <h3>What is a stale read in a multi-agent system?</h3>
+        <details class="faq-item">
+          <summary>What is a stale read in a multi-agent system?</summary>
           <p>When one agent reads an artifact — a plan, a document, a result — that another agent has already updated, the reader gets a stale copy. Most frameworks don't track who has the latest version, so agents either re-read everything every turn (expensive) or quietly use outdated data (a debugging black hole). agent-coherence detects that exact moment.</p>
-        </div>
+        </details>
 
-        <div class="faq-item">
-          <h3>How is this different from LangSmith or Braintrust?</h3>
+        <details class="faq-item">
+          <summary>How is this different from LangSmith or Braintrust?</summary>
           <p>LangSmith and Braintrust show you what your agents did. agent-coherence shows you when one of them was wrong because it read stale state from another. The difference is structural — we track per-agent ownership of shared artifacts (MESI states), so the tool can flag a read that returned an outdated copy. Trace-only tools cannot detect this because they lack the state model.</p>
-        </div>
+        </details>
 
-        <div class="faq-item">
-          <h3>Do I have to switch frameworks or model providers?</h3>
+        <details class="faq-item">
+          <summary>Do I have to switch frameworks or model providers?</summary>
           <p>No. Drop-in adapters ship for LangGraph (<code>CCSStore</code>), CrewAI, AutoGen, and any custom orchestrator via <code>CoherenceAdapterCore</code>. The protocol operates on artifacts, not model responses, so it works the same with Anthropic, OpenAI, Google, Mistral, AWS Bedrock, Azure OpenAI, and open-source models.</p>
-        </div>
+        </details>
 
-        <div class="faq-item">
-          <h3>What happens when two agents try to write to the same artifact?</h3>
+        <details class="faq-item">
+          <summary>What happens when two agents try to write to the same artifact?</summary>
           <p>The protocol enforces single-writer exclusivity. Only one agent holds write permission at a time; concurrent writes are prevented at the protocol level, not "resolved" by an append-only reducer that produces duplicates or unexpected list nesting. For workloads where concurrent writes are semantically composable, CRDTs are the right tool — see the <a href="https://github.com/hipvlady/agent-coherence/blob/main/docs/why-coherence-matters.md" rel="noopener">Why Coherence Matters</a> doc for the layered model.</p>
-        </div>
+        </details>
 
-        <div class="faq-item">
-          <h3>How much does it actually save, and on what kind of workload?</h3>
+        <details class="faq-item">
+          <summary>How much does it actually save, and on what kind of workload?</summary>
           <p>69% token reduction on read-heavy workloads (12:1 read/write ratio), 47% on moderate (8:3), 29% on write-heavy (8:4). The lever is invalidation signals (~12 tokens) replacing full-artifact rebroadcasts. Run the benchmarks yourself: <code>pip install "agent-coherence[langgraph,benchmark]"</code> then <code>make benchmark</code>. CI uses <code>GenericFakeChatModel</code> — no live API calls required.</p>
-        </div>
+        </details>
 
-        <div class="faq-item">
-          <h3>Is it production-ready?</h3>
+        <details class="faq-item">
+          <summary>Is it production-ready?</summary>
           <p>Apache-2.0, on PyPI, 165 tests, TLA+/TLC model-checked safety properties (single-writer, monotonic versioning, no torn reads), PyPI Trusted Publishers with PEP 740 attestations and CycloneDX SBOM published with every release. Opt-in crash-recovery sweep reclaims stale grants when agents OOM-kill or livelock. <code>ccs-diagnose</code> runs as a zero-network static analyzer on existing graphs before adoption.</p>
-        </div>
+        </details>
 
       </div>
     </div>
