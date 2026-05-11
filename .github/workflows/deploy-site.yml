@@ -32,6 +32,19 @@ jobs:
           rsvg-convert -w 1200 -h 630 site/og-image.svg -o site/og-image.png
           ls -la site/og-image.*
 
+      - name: Stamp build-time freshness dates
+        run: |
+          TODAY_ISO=$(date -u +%Y-%m-%dT%H:%M:%S+00:00)
+          TODAY_DATE=$(date -u +%Y-%m-%d)
+          # JSON-LD dateModified — keeps datePublished untouched
+          sed -i "s|\"dateModified\": \"[^\"]*\"|\"dateModified\": \"$TODAY_ISO\"|g" site/index.html
+          # Sitemap lastmod
+          sed -i "s|<lastmod>[^<]*</lastmod>|<lastmod>$TODAY_DATE</lastmod>|g" site/sitemap.xml
+          echo "dateModified  -> $TODAY_ISO"
+          echo "sitemap lastmod -> $TODAY_DATE"
+          grep -c "dateModified" site/index.html
+          grep "<lastmod>" site/sitemap.xml
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
