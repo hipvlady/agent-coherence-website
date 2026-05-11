@@ -50,3 +50,24 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  indexnow:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Notify IndexNow (Bing, Yandex, Seznam, Naver)
+        run: |
+          curl -fsS -X POST "https://api.indexnow.org/IndexNow" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d '{
+              "host": "agent-coherence.dev",
+              "key": "9b9d7a5dd4c917e5ab2cfc22d73438760ace80a06536b547787f635db41a2cf8",
+              "keyLocation": "https://agent-coherence.dev/9b9d7a5dd4c917e5ab2cfc22d73438760ace80a06536b547787f635db41a2cf8.txt",
+              "urlList": [
+                "https://agent-coherence.dev/",
+                "https://agent-coherence.dev/llms.txt",
+                "https://agent-coherence.dev/sitemap.xml"
+              ]
+            }'
+          echo "IndexNow notified."

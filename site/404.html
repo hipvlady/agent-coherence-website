@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 — agent-coherence</title>
+  <meta name="description" content="That page doesn't exist on agent-coherence.dev. Try the home page, GitHub repo, or arXiv paper.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://agent-coherence.dev/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="color-scheme" content="dark light">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #131418;
+      --border: #262830;
+      --text: #e8e8ea;
+      --muted: #9095a0;
+      --accent: #5eead4;
+      --accent-dim: #14b8a6;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --surface: #f7f8fa;
+        --border: #e3e5ea;
+        --text: #0a0a0a;
+        --muted: #5a6070;
+        --accent: #0d9488;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      text-align: center;
+    }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+      margin-bottom: 48px;
+    }
+    .logo svg { color: var(--accent); }
+    .code {
+      font-size: clamp(64px, 14vw, 128px);
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -4px;
+      line-height: 1;
+      margin: 0 0 16px;
+    }
+    h1 {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 12px;
+      max-width: 640px;
+    }
+    p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.5;
+      max-width: 520px;
+      margin: 0 0 32px;
+    }
+    .links {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    a.btn {
+      display: inline-block;
+      padding: 11px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: var(--surface);
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    a.btn:hover { border-color: var(--accent); color: var(--accent); }
+    a.btn.primary {
+      background: var(--accent);
+      color: #06231f;
+      border-color: var(--accent);
+    }
+    a.btn.primary:hover { background: var(--accent-dim); color: #06231f; }
+    .foot {
+      margin-top: 56px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .foot a { color: var(--muted); text-decoration: none; border-bottom: 1px dotted var(--border); }
+    .foot a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <a class="logo" href="/" aria-label="agent-coherence home">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="7" cy="12" r="3.6" fill="currentColor"/>
+      <circle cx="17" cy="12" r="3.6" stroke="currentColor" stroke-width="1.8"/>
+      <line x1="10.6" y1="12" x2="13.4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <span>agent-coherence<span style="color: var(--accent);">.</span></span>
+  </a>
+
+  <div class="code">404</div>
+  <h1>That page was invalidated.</h1>
+  <p>The coordinator can't find it. Try the home page, the source repo, or the paper.</p>
+
+  <div class="links">
+    <a class="btn primary" href="/">← Home</a>
+    <a class="btn" href="https://github.com/hipvlady/agent-coherence" rel="noopener">GitHub</a>
+    <a class="btn" href="https://arxiv.org/abs/2603.15183" rel="noopener">arXiv paper</a>
+    <a class="btn" href="https://github.com/hipvlady/agent-coherence/discussions" rel="noopener">Discussions</a>
+  </div>
+
+  <div class="foot">
+    Misrouted link? <a href="mailto:contact@agent-coherence.dev">contact@agent-coherence.dev</a>
+  </div>
+
+</body>
+</html>
