@@ -173,7 +173,10 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-NJ3C5FZX64', { anonymize_ip: true });
+    gtag('config', 'G-NJ3C5FZX64', {
+      anonymize_ip: true,
+      linker: { domains: ['cal.com', 'agent-coherence.dev'] }
+    });
   </script>
 
   <style>
@@ -611,12 +614,9 @@
     <div class="container">
       <a class="brand" href="/" aria-label="agent-coherence home">
         <svg class="brand-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="6" cy="7" r="2.6" stroke="currentColor" stroke-width="1.6"/>
-          <circle cx="18" cy="7" r="2.6" stroke="currentColor" stroke-width="1.6"/>
-          <circle cx="12" cy="18" r="2.6" fill="currentColor" stroke="currentColor" stroke-width="1.6"/>
-          <line x1="8.6" y1="7" x2="15.4" y2="7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          <line x1="7.3" y1="9.2" x2="11" y2="15.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          <line x1="16.7" y1="9.2" x2="13" y2="15.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="7" cy="12" r="3.6" fill="currentColor"/>
+          <circle cx="17" cy="12" r="3.6" stroke="currentColor" stroke-width="1.8"/>
+          <line x1="10.6" y1="12" x2="13.4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
         <span>agent-coherence<span class="dot">.</span></span>
       </a>
@@ -627,7 +627,7 @@
         <a href="#faq">FAQ</a>
         <a href="https://github.com/hipvlady/agent-coherence" rel="noopener">GitHub</a>
       </nav>
-      <a class="btn primary header-cta" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_header&utm_campaign=launch" rel="noopener" data-cta="book-a-call-header">Book a call</a>
+      <a class="btn primary header-cta" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_header&utm_campaign=launch" rel="noopener" data-cta-target="cal" data-cta-location="header">Book a call</a>
     </div>
   </header>
 
@@ -643,9 +643,9 @@
       </div>
 
       <div class="ctas">
-        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=launch" rel="noopener" data-cta="book-a-call">Book a 15-min call →</a>
-        <a class="btn" href="https://github.com/hipvlady/agent-coherence" rel="noopener" data-cta="github">View on GitHub</a>
-        <a class="btn" href="https://arxiv.org/abs/2603.15183" rel="noopener" data-cta="paper">Read the paper</a>
+        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=launch" rel="noopener" data-cta-target="cal" data-cta-location="hero">Book a 15-min call →</a>
+        <a class="btn" href="https://github.com/hipvlady/agent-coherence" rel="noopener" data-cta-target="github" data-cta-location="hero">View on GitHub</a>
+        <a class="btn" href="https://arxiv.org/abs/2603.15183" rel="noopener" data-cta-target="arxiv" data-cta-location="hero">Read the paper</a>
       </div>
 
       <div class="stats">
@@ -801,7 +801,7 @@ graph = builder.compile(store=store)</pre>
           <h3>Have a multi-agent system burning tokens on shared state?</h3>
           <p>15-minute call. We'll look at your graph and tell you whether agent-coherence will move the number.</p>
         </div>
-        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_bottom&utm_campaign=launch" rel="noopener" data-cta="book-a-call-bottom">Book a call →</a>
+        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_bottom&utm_campaign=launch" rel="noopener" data-cta-target="cal" data-cta-location="bottom">Book a call →</a>
       </div>
     </div>
   </section>
@@ -810,17 +810,19 @@ graph = builder.compile(store=store)</pre>
     <div class="container">
       <div>© <span id="year">2026</span> agent-coherence · Apache-2.0</div>
       <nav>
-        <a href="https://github.com/hipvlady/agent-coherence" rel="noopener">GitHub</a>
-        <a href="https://pypi.org/project/agent-coherence/" rel="noopener">PyPI</a>
-        <a href="https://arxiv.org/abs/2603.15183" rel="noopener">arXiv</a>
-        <a href="https://github.com/hipvlady/agent-coherence/discussions" rel="noopener">Discussions</a>
-        <a href="mailto:contact@agent-coherence.dev">contact@agent-coherence.dev</a>
+        <a href="https://github.com/hipvlady/agent-coherence" rel="noopener" data-cta-target="github" data-cta-location="footer">GitHub</a>
+        <a href="https://pypi.org/project/agent-coherence/" rel="noopener" data-cta-target="pypi" data-cta-location="footer">PyPI</a>
+        <a href="https://arxiv.org/abs/2603.15183" rel="noopener" data-cta-target="arxiv" data-cta-location="footer">arXiv</a>
+        <a href="https://github.com/hipvlady/agent-coherence/discussions" rel="noopener" data-cta-target="discussions" data-cta-location="footer">Discussions</a>
+        <a href="mailto:contact@agent-coherence.dev" data-cta-target="email" data-cta-location="footer">contact@agent-coherence.dev</a>
       </nav>
     </div>
   </footer>
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // pip install copy → strong intent signal
     document.querySelectorAll('.copy-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const text = btn.getAttribute('data-copy');
@@ -828,13 +830,49 @@ graph = builder.compile(store=store)</pre>
           const orig = btn.textContent;
           btn.textContent = 'Copied';
           setTimeout(() => { btn.textContent = orig; }, 1500);
-          if (window.gtag) gtag('event', 'copy_install', { text });
+          if (window.gtag) gtag('event', 'pip_install_copied', { snippet: text });
         });
       });
     });
-    document.querySelectorAll('[data-cta]').forEach(el => {
+
+    // CTA clicks → emit cta_target + cta_location so GA splits by position
+    document.querySelectorAll('[data-cta-target]').forEach(el => {
       el.addEventListener('click', () => {
-        if (window.gtag) gtag('event', 'cta_click', { cta: el.getAttribute('data-cta') });
+        if (!window.gtag) return;
+        gtag('event', 'cta_click', {
+          cta_target: el.getAttribute('data-cta-target'),
+          cta_location: el.getAttribute('data-cta-location') || 'unknown',
+          cta_text: (el.textContent || '').trim().slice(0, 60)
+        });
+      });
+    });
+
+    // Scroll milestones → does anyone read past benchmarks → FAQ → CTA?
+    (() => {
+      const marks = [25, 50, 75, 100];
+      const fired = new Set();
+      const onScroll = () => {
+        const doc = document.documentElement;
+        const max = (doc.scrollHeight - doc.clientHeight) || 1;
+        const pct = Math.round((window.scrollY / max) * 100);
+        for (const m of marks) {
+          if (pct >= m && !fired.has(m)) {
+            fired.add(m);
+            if (window.gtag) gtag('event', 'scroll_milestone', { percent: m });
+          }
+        }
+        if (fired.size === marks.length) window.removeEventListener('scroll', onScroll);
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+    })();
+
+    // FAQ open → which questions resonate
+    document.querySelectorAll('details.faq-item').forEach(d => {
+      d.addEventListener('toggle', () => {
+        if (d.open && window.gtag) {
+          const q = (d.querySelector('summary')?.textContent || '').trim().slice(0, 80);
+          gtag('event', 'faq_open', { question: q });
+        }
       });
     });
   </script>
