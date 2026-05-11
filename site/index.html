@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>agent-coherence — Coherence layer for multi-agent LLM systems</title>
+  <title>agent-coherence — Detect stale reads in multi-agent LLM systems</title>
 
-  <meta name="description" content="Cut shared-artifact token costs 29–69% across LangGraph, CrewAI, and AutoGen with MESI cache coherence. Vendor-neutral, framework-agnostic, Apache-2.0.">
-  <meta name="keywords" content="multi-agent LLM, LangGraph optimization, cache coherence, MESI, agent token costs, CCSStore, CrewAI, AutoGen, agent observability, langgraph cache, multi-agent framework">
+  <meta name="description" content="When agents share state, one is reading stale. agent-coherence makes it visible and serves the fresh version on the next read. LangGraph, CrewAI, AutoGen. Vendor-neutral.">
+  <meta name="keywords" content="stale-read detection, multi-agent observability, agent run recorder, LangGraph debugging, cache coherence, MESI, CCSStore, CrewAI, AutoGen, agent state consistency, multi-agent framework">
   <meta name="author" content="Vladyslav Parakhin">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://agent-coherence.dev/">
 
-  <meta property="og:title" content="agent-coherence — Coherence layer for multi-agent LLM systems">
-  <meta property="og:description" content="Cut shared-artifact token costs 29–69% across LangGraph, CrewAI, and AutoGen with MESI cache coherence. One import change. Vendor-neutral.">
+  <meta property="og:title" content="agent-coherence — Detect stale reads in multi-agent LLM systems">
+  <meta property="og:description" content="When agents share state, one is reading stale. agent-coherence makes it visible and serves the fresh version on the next read. LangGraph, CrewAI, AutoGen. Vendor-neutral.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://agent-coherence.dev/">
   <meta property="og:image" content="https://agent-coherence.dev/og-image.png">
@@ -23,8 +23,8 @@
   <meta property="og:locale" content="en_US">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="agent-coherence — Coherence layer for multi-agent LLM systems">
-  <meta name="twitter:description" content="Cut shared-artifact token costs 29–69% across LangGraph, CrewAI, and AutoGen with MESI cache coherence.">
+  <meta name="twitter:title" content="agent-coherence — Detect stale reads in multi-agent LLM systems">
+  <meta name="twitter:description" content="When agents share state, one is reading stale. agent-coherence makes it visible and serves the fresh version on the next read.">
   <meta name="twitter:image" content="https://agent-coherence.dev/og-image.png">
 
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -37,7 +37,7 @@
     "@type": "SoftwareSourceCode",
     "name": "agent-coherence",
     "alternateName": "ccs",
-    "description": "MESI-style cache coherence for shared artifacts in multi-agent LLM systems. Cuts shared-artifact token costs 29–69% across LangGraph, CrewAI, and AutoGen.",
+    "description": "Detects stale reads in multi-agent LLM systems and serves the fresh version on the next read instead of rebroadcasting. MESI-style cache coherence across LangGraph, CrewAI, and AutoGen. Vendor-neutral.",
     "url": "https://agent-coherence.dev",
     "codeRepository": "https://github.com/hipvlady/agent-coherence",
     "programmingLanguage": "Python",
@@ -411,8 +411,8 @@
   <section class="hero">
     <div class="container">
       <span class="badge">v<span class="ver">0.7</span> · Apache-2.0 · PyPI</span>
-      <h1>The coherence layer for multi-agent LLM systems.</h1>
-      <p class="lead">Cut shared-artifact token costs <strong>29–69%</strong> across LangGraph, CrewAI, and AutoGen with MESI-style cache coherence. Vendor-neutral, framework-agnostic, one import change.</p>
+      <h1>When agents share state, one of them is reading a stale copy.</h1>
+      <p class="lead">agent-coherence makes that visible — and serves the fresh version on the next read instead of rebroadcasting the full artifact every turn. Same library, same protocol, across <strong>LangGraph, CrewAI, AutoGen</strong>, and any custom orchestrator. Same behavior regardless of which model provider (<strong>Anthropic, OpenAI, Google, Mistral, open-source</strong>) the agents talk to.</p>
 
       <div class="install">
         <code><span class="prompt">$</span> pip install <span class="pkg">"agent-coherence[langgraph]"</span></code>
