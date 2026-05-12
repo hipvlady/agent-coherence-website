@@ -303,6 +303,14 @@
 
     /* Hero */
     section.hero { padding: 72px 0 24px; }
+    .eyebrow {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 14px;
+    }
     .badge {
       display: inline-block;
       padding: 4px 10px;
@@ -452,6 +460,49 @@
       font-size: 0.95rem;
     }
     @media (max-width: 720px) { .cols-3 { grid-template-columns: 1fr; } }
+
+    /* 2-col category contrast */
+    .cols-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-top: 24px;
+    }
+    .cols-2 .col-card { position: relative; }
+    .col-card .col-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 10px;
+    }
+    .col-card.is-this { border-color: var(--accent-dim); }
+    .col-card.is-this .col-label { color: var(--accent); }
+    .col-card.is-this::after {
+      content: "this";
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      padding: 3px 8px;
+      border: 1px solid var(--accent-dim);
+      border-radius: 999px;
+    }
+    .col-card h3 { margin: 0 0 8px; font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
+    .col-card .col-meta {
+      margin: 12px 0 0;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .col-card .col-meta strong { color: var(--text); font-weight: 600; }
+    @media (max-width: 720px) { .cols-2 { grid-template-columns: 1fr; } }
 
     /* Frameworks grid */
     .frameworks {
@@ -637,6 +688,7 @@
 
   <section class="hero">
     <div class="container">
+      <p class="eyebrow">Write-side coherence for collaborating agents</p>
       <span class="badge">v<span class="ver">0.7</span> · Apache-2.0 · PyPI</span>
       <h1>When agents share state, one of them is reading a stale copy.</h1>
       <p class="lead">agent-coherence makes that visible — and serves the fresh version on the next read instead of rebroadcasting the full artifact every turn. Same library, same protocol, across <strong>LangGraph, CrewAI, AutoGen</strong>, and any custom orchestrator. Same behavior regardless of which model provider (<strong>Anthropic, OpenAI, Google, Mistral, open-source</strong>) the agents talk to.</p>
@@ -666,6 +718,31 @@
           <div class="label">/year saved on one 1,000-runs/day code-review workload</div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section id="category">
+    <div class="container">
+      <h2>Two coherence problems. agent-coherence solves the write side.</h2>
+      <p class="lead">If your agents only read from sources <em>you don't control</em>, you need a freshness pipeline. If your agents <em>write to each other's state</em>, you need a coherence protocol. They're different problems — and the wrong tool for one is silent failure in the other.</p>
+
+      <div class="cols-2">
+        <div class="col-card">
+          <p class="col-label">Read-side freshness</p>
+          <h3>Agents downstream of an external source.</h3>
+          <p>The world writes (commits, Slack, docs, tickets); agents read. You need an <strong>index pipeline</strong> that keeps the corpus current as sources change — incremental embeddings, knowledge graphs, retrieval.</p>
+          <p class="col-meta"><strong>Examples:</strong> RAG over a codebase, search over a meeting archive, knowledge-graph extraction from a doc store.</p>
+        </div>
+
+        <div class="col-card is-this">
+          <p class="col-label">Write-side coherence</p>
+          <h3>Agents are themselves the source of truth.</h3>
+          <p>The agents write — they collaborate on shared plans, edit specs, mutate memory, hand off scratchpads. You need a <strong>coherence protocol</strong> that detects stale reads and enforces single-writer ordering when one agent commits.</p>
+          <p class="col-meta"><strong>Examples:</strong> multi-agent planners, parallel sub-agents editing a spec, coding agents collaborating on a refactor, research crews mutating shared notes.</p>
+        </div>
+      </div>
+
+      <p style="margin-top:24px; color: var(--muted); font-size: 0.95rem;">Both layers are needed in a real production system. agent-coherence focuses on the write side. The freshness side is solved by a growing ecosystem of incremental indexing tools — use them together.</p>
     </div>
   </section>
 
