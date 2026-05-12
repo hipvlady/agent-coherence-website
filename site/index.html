@@ -325,6 +325,18 @@
     .stat-callout em { color: var(--text); font-style: italic; }
     .stat-callout a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent-dim); }
     .stat-callout a:hover { border-bottom-style: solid; }
+    .primary-callout {
+      border-left-width: 4px;
+      padding: 20px 22px;
+      font-size: 1.02rem;
+      background:
+        linear-gradient(90deg, rgba(94, 234, 212, 0.06), transparent 65%),
+        var(--surface);
+    }
+    .primary-callout > p:first-child {
+      color: var(--text);
+      font-style: italic;
+    }
     .badge {
       display: inline-block;
       padding: 4px 10px;
@@ -779,10 +791,11 @@
       <h1>When agents share state, one of them is reading a stale copy.</h1>
       <p class="lead">That stale read is how <strong>shared memory pollution</strong> starts — one agent's hallucination becomes a "fact" the next one reasons from, and a <strong>cascading error</strong> propagates downstream. agent-coherence makes the moment visible and serves the fresh version on the next read instead of rebroadcasting the full artifact every turn. Same library, same protocol, across <strong>LangGraph, CrewAI, AutoGen</strong>, and any custom orchestrator. Same behavior regardless of model provider (<strong>Anthropic, OpenAI, Google, Mistral, open-source</strong>).</p>
 
-      <p class="stat-callout">
-        <strong>32%</strong> of agent teams cite quality — <em>"hallucinations and consistency of outputs"</em> — as the #1 production blocker.
-        <a href="https://www.langchain.com/state-of-agent-engineering" rel="noopener">LangChain, State of Agent Engineering 2026</a>. <strong>agent-coherence addresses the consistency half.</strong>
-      </p>
+      <blockquote class="stat-callout primary-callout">
+        <p style="margin:0 0 8px;">"This asynchronicity adds challenges in result coordination, <strong>state consistency</strong>, and error propagation across the subagents."</p>
+        <p style="margin:0; font-size:0.82rem; letter-spacing:0.02em;">— Anthropic Engineering, <a href="https://www.anthropic.com/engineering/multi-agent-research-system" rel="noopener">How we built our multi-agent research system</a> (June 2025), on what blocks async multi-agent execution at scale.</p>
+        <p style="margin:10px 0 0;"><strong>Anthropic named the problem. agent-coherence is the protocol that addresses it.</strong></p>
+      </blockquote>
 
       <div class="install">
         <code><span class="prompt">$</span> pip install <span class="pkg">"agent-coherence[langgraph]"</span></code>
@@ -908,6 +921,11 @@
 store = CCSStore(strategy=<span class="str">"lazy"</span>)
 graph = builder.compile(store=store)</pre>
 
+      <blockquote class="stat-callout">
+        <p style="margin:0 0 6px; color: var(--text); font-style: italic;">"Subagent output to a filesystem to minimize the 'game of telephone' [...] implement artifact systems where specialized agents can create outputs that persist independently."</p>
+        <p style="margin:0; font-size:0.82rem;">— Anthropic Engineering, <a href="https://www.anthropic.com/engineering/multi-agent-research-system" rel="noopener">multi-agent research system</a> (Appendix, June 2025). <strong>CCSStore is exactly that pattern — plus coherence semantics so subagents know when their cached view is stale.</strong></p>
+      </blockquote>
+
       <p>Provider-neutral: same behavior with <strong>Anthropic, OpenAI, Google, Mistral, or open-source models</strong>. The protocol operates on artifacts, not model responses.</p>
     </div>
   </section>
@@ -931,7 +949,8 @@ graph = builder.compile(store=store)</pre>
   <section id="stack">
     <div class="container">
       <h2>Where this fits in the agentic stack.</h2>
-      <p class="lead">Enterprise agentic platform architecture, as described in industry analysis from QuantumBlack/McKinsey, names a distinct layer of <strong>agentic shared services</strong> — the protocol-first, composable substrate that sits between agent runtimes and the rest of the enterprise. agent-coherence is a state-consistency primitive in that layer.</p>
+      <p class="lead">Anthropic's engineering team, after shipping their <a href="https://www.anthropic.com/engineering/multi-agent-research-system" rel="noopener">multi-agent Research system</a> to production, named <strong>state consistency</strong> as one of three challenges blocking async multi-agent execution at scale. <strong>agent-coherence is the protocol that addresses it.</strong></p>
+      <p class="lead" style="font-size: 1.02rem; color: var(--muted);">Architecturally, this is the layer QuantumBlack/McKinsey describes as <strong>agentic shared services</strong> — the protocol-first, composable substrate between agent runtimes and enterprise data. agent-coherence is the state-consistency primitive that lives there.</p>
 
       <div class="stack">
         <div class="stack-layer">
@@ -961,6 +980,9 @@ graph = builder.compile(store=store)</pre>
 
       <p class="stack-caption">
         Layer naming follows <a href="https://medium.com/quantumblack/creating-a-future-proof-enterprise-agentic-platform-architecture-c21fc48406a5" rel="noopener">"Creating a future-proof enterprise agentic platform architecture"</a> (QuantumBlack/McKinsey). agent-coherence is composable by design: it slots alongside your existing evaluations, observability, and memory layers — same library across LangGraph, CrewAI, AutoGen, and custom runtimes, vendor-neutral across Anthropic, OpenAI, Google, Mistral, and open-source models. Multi-vendor workflows, minimum lock-in.
+      </p>
+      <p class="stack-caption" style="font-size: 0.85rem; opacity: 0.9;">
+        The audience signal is consistent: <strong style="color: var(--text);">32%</strong> of agent teams cite quality — <em style="color: var(--text);">"hallucinations and consistency of outputs"</em> — as the #1 production blocker. <a href="https://www.langchain.com/state-of-agent-engineering" rel="noopener">LangChain, State of Agent Engineering 2026</a>.
       </p>
     </div>
   </section>
