@@ -119,10 +119,10 @@
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "What is a stale read in a multi-agent system?",
+            "name": "What is a stale read — and how does it cause shared memory pollution?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "When one agent reads an artifact (a plan, a document, a result) that another agent has already updated, the reader gets a stale copy. Most frameworks don't track who has the latest version, so agents either re-read everything every turn (expensive) or quietly use outdated data (a debugging black hole). agent-coherence detects that exact moment."
+              "text": "When one agent reads an artifact (a plan, a document, a result) that another agent has already updated, the reader gets a stale copy. If the reader then writes back, it overwrites the fresh version with logic that was based on stale state. MLflow's multi-agent observability team calls this shared memory pollution: one agent's hallucination becomes a 'fact' subsequent agents reason from, producing cascading errors that compound across reasoning steps. Trace-only tools can see the calls but not the staleness; agent-coherence detects the exact moment of divergence."
             }
           },
           {
@@ -311,6 +311,20 @@
       color: var(--accent);
       margin: 0 0 14px;
     }
+    .stat-callout {
+      margin: 24px 0 8px;
+      padding: 16px 20px;
+      border-left: 3px solid var(--accent);
+      background: var(--surface);
+      border-radius: 4px;
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .stat-callout strong { color: var(--text); }
+    .stat-callout em { color: var(--text); font-style: italic; }
+    .stat-callout a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent-dim); }
+    .stat-callout a:hover { border-bottom-style: solid; }
     .badge {
       display: inline-block;
       padding: 4px 10px;
@@ -688,10 +702,15 @@
 
   <section class="hero">
     <div class="container">
-      <p class="eyebrow">Write-side coherence for collaborating agents</p>
+      <p class="eyebrow">State consistency · Write-side coherence for collaborating agents</p>
       <span class="badge">v<span class="ver">0.7</span> · Apache-2.0 · PyPI</span>
       <h1>When agents share state, one of them is reading a stale copy.</h1>
-      <p class="lead">agent-coherence makes that visible — and serves the fresh version on the next read instead of rebroadcasting the full artifact every turn. Same library, same protocol, across <strong>LangGraph, CrewAI, AutoGen</strong>, and any custom orchestrator. Same behavior regardless of which model provider (<strong>Anthropic, OpenAI, Google, Mistral, open-source</strong>) the agents talk to.</p>
+      <p class="lead">That stale read is how <strong>shared memory pollution</strong> starts — one agent's hallucination becomes a "fact" the next one reasons from, and a <strong>cascading error</strong> propagates downstream. agent-coherence makes the moment visible and serves the fresh version on the next read instead of rebroadcasting the full artifact every turn. Same library, same protocol, across <strong>LangGraph, CrewAI, AutoGen</strong>, and any custom orchestrator. Same behavior regardless of model provider (<strong>Anthropic, OpenAI, Google, Mistral, open-source</strong>).</p>
+
+      <p class="stat-callout">
+        <strong>32%</strong> of agent teams cite quality — <em>"hallucinations and consistency of outputs"</em> — as the #1 production blocker.
+        <a href="https://www.langchain.com/state-of-agent-engineering" rel="noopener">LangChain, State of Agent Engineering 2026</a>. <strong>agent-coherence addresses the consistency half.</strong>
+      </p>
 
       <div class="install">
         <code><span class="prompt">$</span> pip install <span class="pkg">"agent-coherence[langgraph]"</span></code>
@@ -738,6 +757,7 @@
           <p class="col-label">Write-side coherence</p>
           <h3>Agents are themselves the source of truth.</h3>
           <p>The agents write — they collaborate on shared plans, edit specs, mutate memory, hand off scratchpads. You need a <strong>coherence protocol</strong> that detects stale reads and enforces single-writer ordering when one agent commits.</p>
+          <p style="margin: 12px 0 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--text);">Failure modes caught:</strong> stale reads · shared memory pollution · cascading errors · context handoff drift · concurrent-write conflicts.</p>
           <p class="col-meta"><strong>Examples:</strong> multi-agent planners, parallel sub-agents editing a spec, coding agents collaborating on a refactor, research crews mutating shared notes.</p>
         </div>
       </div>
@@ -842,8 +862,8 @@ graph = builder.compile(store=store)</pre>
       <div class="faq-list">
 
         <details class="faq-item">
-          <summary>What is a stale read in a multi-agent system?</summary>
-          <p>When one agent reads an artifact — a plan, a document, a result — that another agent has already updated, the reader gets a stale copy. Most frameworks don't track who has the latest version, so agents either re-read everything every turn (expensive) or quietly use outdated data (a debugging black hole). agent-coherence detects that exact moment.</p>
+          <summary>What is a stale read — and how does it cause shared memory pollution?</summary>
+          <p>When one agent reads an artifact — a plan, a document, a result — that another agent has already updated, the reader gets a stale copy. If the reader then writes back, it overwrites the fresh version with logic that was based on stale state. MLflow's multi-agent observability team calls this <strong>shared memory pollution</strong>: one agent's hallucination becomes a "fact" subsequent agents reason from, producing <strong>cascading errors</strong> that compound across reasoning steps. Trace-only tools can see the calls but not the staleness; agent-coherence detects the exact moment of divergence.</p>
         </details>
 
         <details class="faq-item">
