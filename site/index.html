@@ -518,6 +518,78 @@
     .col-card .col-meta strong { color: var(--text); font-weight: 600; }
     @media (max-width: 720px) { .cols-2 { grid-template-columns: 1fr; } }
 
+    /* Agentic stack diagram */
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 28px 0 12px;
+    }
+    .stack-layer {
+      position: relative;
+      padding: 18px 22px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+    .stack-layer h3 {
+      margin: 4px 0 6px;
+      font-size: 1.02rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .stack-layer .stack-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0;
+    }
+    .stack-layer .stack-meta {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+    .stack-layer .stack-meta code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 0 5px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    .stack-layer.is-this {
+      border-color: var(--accent-dim);
+      background:
+        linear-gradient(90deg, rgba(94, 234, 212, 0.06), transparent 60%),
+        var(--surface);
+    }
+    .stack-layer.is-this .stack-label { color: var(--accent); }
+    .this-tag {
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border: 1px solid var(--accent-dim);
+      border-radius: 999px;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      vertical-align: 1px;
+    }
+    .stack-caption {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .stack-caption a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px dotted var(--accent-dim);
+    }
+    .stack-caption a:hover { border-bottom-style: solid; }
+
     /* Frameworks grid */
     .frameworks {
       display: grid;
@@ -846,12 +918,50 @@ graph = builder.compile(store=store)</pre>
 
       <ul class="trust-list">
         <li><span class="tag">Open</span>Apache-2.0 license, public on <a href="https://github.com/hipvlady/agent-coherence" rel="noopener">GitHub</a></li>
+        <li><span class="tag">Composable</span>Protocol-first and composable — slots into the agentic shared services layer without rewriting agent code or locking you to a runtime</li>
         <li><span class="tag">Verified</span>Protocol safety properties model-checked with TLA+/TLC in CI</li>
         <li><span class="tag">Published</span><a href="https://arxiv.org/abs/2603.15183" rel="noopener">arXiv 2603.15183</a> — formal protocol and simulation results</li>
         <li><span class="tag">Supply chain</span>PyPI Trusted Publishers (OIDC), PEP 740 attestations, CycloneDX SBOM</li>
         <li><span class="tag">Diagnose</span><code>ccs-diagnose</code> — zero-network stale-read detector for existing graphs</li>
         <li><span class="tag">Recovery</span>Crash-recovery sweep reclaims stale grants when agents OOM-kill or livelock</li>
       </ul>
+    </div>
+  </section>
+
+  <section id="stack">
+    <div class="container">
+      <h2>Where this fits in the agentic stack.</h2>
+      <p class="lead">Enterprise agentic platform architecture, as described in industry analysis from QuantumBlack/McKinsey, names a distinct layer of <strong>agentic shared services</strong> — the protocol-first, composable substrate that sits between agent runtimes and the rest of the enterprise. agent-coherence is a state-consistency primitive in that layer.</p>
+
+      <div class="stack">
+        <div class="stack-layer">
+          <p class="stack-label">Agentic systems &amp; runtimes</p>
+          <h3>Where the agents actually execute.</h3>
+          <p class="stack-meta">MS AI Foundry · Google Vertex · AWS Bedrock · LangGraph · CrewAI · AutoGen · Ark · Kagent · custom orchestrators.</p>
+        </div>
+
+        <div class="stack-layer">
+          <p class="stack-label">Interfaces &amp; agentic orchestration</p>
+          <h3>How agents talk to each other and the world.</h3>
+          <p class="stack-meta">A2A · MCP · planner / supervisor patterns · tool routing.</p>
+        </div>
+
+        <div class="stack-layer is-this">
+          <p class="stack-label">Agentic shared services<span class="this-tag">agent-coherence is here</span></p>
+          <h3>State consistency · coherence protocol · single-writer ordering.</h3>
+          <p class="stack-meta">Co-resident with: agentic evaluation · observability · memory management · feedback loops · security &amp; protocol standards. Composable and protocol-first — drop into existing orchestration without rewriting agent code.</p>
+        </div>
+
+        <div class="stack-layer">
+          <p class="stack-label">In-house systems &amp; external data</p>
+          <h3>Sources the agents read from.</h3>
+          <p class="stack-meta">Knowledge graphs, RAG corpora, vector stores, read-side freshness pipelines, ticketing systems, code repos.</p>
+        </div>
+      </div>
+
+      <p class="stack-caption">
+        Layer naming follows <a href="https://medium.com/quantumblack/creating-a-future-proof-enterprise-agentic-platform-architecture-c21fc48406a5" rel="noopener">"Creating a future-proof enterprise agentic platform architecture"</a> (QuantumBlack/McKinsey). agent-coherence is composable by design: it slots alongside your existing evaluations, observability, and memory layers — same library across LangGraph, CrewAI, AutoGen, and custom runtimes, vendor-neutral across Anthropic, OpenAI, Google, Mistral, and open-source models. Multi-vendor workflows, minimum lock-in.
+      </p>
     </div>
   </section>
 
