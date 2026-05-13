@@ -184,6 +184,40 @@
     .badge .ver { color: var(--accent); }
     .ctas { display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0 8px; }
 
+    /* Quickstart install block */
+    .install {
+      margin-top: 22px;
+      padding: 16px 20px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .install code {
+      color: var(--text);
+      background: transparent;
+      padding: 0;
+      font-size: 0.95rem;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    }
+    .install code .prompt { color: var(--muted); }
+    .install code .pkg { color: var(--accent); }
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+    .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+
     /* Sections */
     section { padding: 28px 0; }
     .container > p { color: var(--muted); }
@@ -287,6 +321,53 @@
     pre.code .cm { color: var(--muted); }
     pre.code .kw { color: #c084fc; }
     pre.code .str { color: var(--accent); }
+
+    /* Two-tier adoption table (Hard / Advisory) */
+    .tier-table {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 18px 0 0;
+    }
+    @media (max-width: 760px) {
+      .tier-table { grid-template-columns: 1fr; }
+    }
+    .tier {
+      padding: 20px 22px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+    .tier-hard { border-left: 3px solid var(--accent); }
+    .tier-advisory { border-left: 3px solid var(--accent-dim); opacity: 0.96; }
+    .tier-label {
+      margin: 0 0 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .tier-advisory .tier-label { color: var(--accent-dim); }
+    .tier h4 {
+      margin: 0 0 8px;
+      font-size: 1.02rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .tier p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+    .tier code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
 
     /* Trajectory callout */
     .trajectory {
@@ -461,7 +542,7 @@
   <section class="hero">
     <div class="container">
       <p class="eyebrow">Coding agents · write-side coherence</p>
-      <span class="badge">v<span class="ver">0.7</span> · Apache-2.0 · PyPI</span>
+      <span class="badge">v<span class="ver">0.7.1</span> · Apache-2.0 · PyPI</span>
       <h1>Coding sub-agents collaborating on a refactor — without trampling each other's edits.</h1>
       <p class="lead">Cursor's planner-executor sub-agents, Claude Code's sub-task workers, Factory's parallel runs, Opencode's planning loops — they all share state through a <strong>task spec</strong>. When one sub-agent writes v2 of that spec mid-flight, the others keep operating on v1. agent-coherence detects the moment of divergence and serves the current version on the next read — before any stale commit lands in your repo.</p>
 
@@ -469,6 +550,11 @@
         <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=code" rel="noopener">Book a 15-min call →</a>
         <a class="btn" href="https://github.com/hipvlady/agent-coherence" rel="noopener">View on GitHub</a>
         <a class="btn" href="#demo">Watch it run ↓</a>
+      </div>
+
+      <div class="install">
+        <code><span class="prompt">$</span> pip install <span class="pkg">"agent-coherence[langgraph]"</span></code>
+        <button class="copy-btn" data-copy='pip install "agent-coherence[langgraph]"'>Copy</button>
       </div>
 
       <figure class="hero-diagram">
@@ -495,7 +581,7 @@
           <p class="why-num">2</p>
           <div>
             <h3>Coding agents are increasingly multi-agent, and they share mutable state.</h3>
-            <p>Cursor's planner runs while the executor types. Claude Code spawns parallel sub-tasks. Factory fans out across worktrees. The work is concurrent; the assumption that "what I read is what's current" is implicit, untested, and silently false. agent-coherence makes it explicit and provable.</p>
+            <p>Cursor's planner runs while the executor types. Claude Code spawns parallel sub-tasks. Factory fans out across worktrees. Opencode coordinates planning loops. And as of <strong>2026-05-13</strong>, Anthropic's <strong>Agent View</strong> productized 10+ parallel Claude Code sessions in a single workspace — Research Preview, no documented state-isolation model. The work is concurrent; the assumption that "what I read is what's current" is implicit, untested, and silently false. agent-coherence makes it explicit and provable.</p>
           </div>
         </article>
 
@@ -507,6 +593,10 @@
           </div>
         </article>
       </div>
+
+      <p style="margin: 24px 0 0; color: var(--muted); font-size: 0.95rem; line-height: 1.55;">
+        <strong style="color: var(--text);">Write-side, deliberately.</strong> Read-side approaches keep agents fresh on what the world writes — indexes, knowledge graphs, retrieval. agent-coherence is the write-side complement: keeping agents consistent with each other on the artifacts <em>they</em> write.
+      </p>
     </div>
   </section>
 
@@ -614,6 +704,23 @@ graph = builder.compile(store=store)
 <span class="cm"># to pull the current version — no stale-read window.</span></pre>
 
       <p>The same protocol works on CrewAI and AutoGen via their adapters, and on custom orchestrators via <code>CoherenceAdapterCore</code>. Vendor-neutral across Anthropic, OpenAI, Google, Mistral, and open-source models — the protocol operates on artifacts, not model responses.</p>
+
+      <h3 style="margin: 36px 0 12px; font-size: 1.18rem; letter-spacing: -0.01em;">Two adoption tiers.</h3>
+      <p>Pick where on the commitment curve you want to start.</p>
+      <div class="tier-table">
+        <div class="tier tier-hard">
+          <p class="tier-label">Hard</p>
+          <h4><code>CCSStore</code> — protocol-enforced coherence</h4>
+          <p>Drop-in for LangGraph; adapters for CrewAI, AutoGen, custom orchestrators. Stale reads can't reach commit code because the protocol invalidates peer caches synchronously before <code>write()</code> returns. The fix.</p>
+        </div>
+        <div class="tier tier-advisory">
+          <p class="tier-label">Advisory</p>
+          <h4><code>ccs-diagnose</code> — passive observation, zero code change</h4>
+          <p>Static analyzer that detects divergent-read risk in existing graphs before any adoption. Reports the artifacts whose reads can be handed stale versions, with line numbers. Triage before commitment.</p>
+          <pre class="code" style="margin: 12px 0 0;"><span class="cm"># zero-network, runs against your existing graph</span>
+ccs-diagnose --graph my_graph.py:build_graph</pre>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -652,6 +759,20 @@ graph = builder.compile(store=store)
     </div>
   </footer>
 
+  <script>
+    // pip install copy — strong intent signal
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const text = btn.getAttribute('data-copy');
+        navigator.clipboard.writeText(text).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = orig; }, 1500);
+          if (window.gtag) gtag('event', 'pip_install_copied', { snippet: text, location: 'code' });
+        });
+      });
+    });
+  </script>
 
 </body>
 </html>
