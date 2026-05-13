@@ -97,7 +97,7 @@ record_variant() {
     --cols 120 \
     --rows 32 \
     --overwrite \
-    --command "cd '$AGENT_COHERENCE_REPO' && python -m examples.refactor_demo.main --variant=$variant" \
+    --command "cd '$AGENT_COHERENCE_REPO' && python -W ignore -m examples.refactor_demo.main --variant=$variant 2>/dev/null" \
     "$cast"
 
   echo "─── done: $cast ───────────────────────────────────────────────────"

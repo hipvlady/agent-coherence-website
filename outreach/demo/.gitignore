@@ -1,0 +1,4 @@
+# Asciinema casts — per-take recording artifacts.
+# Reproduce locally with: ./record.sh all
+# README documents the publish path; casts are not version-controlled.
+*.cast
