@@ -192,6 +192,55 @@
     .step.bad h3 { color: #fb7185; }
     .step.good h3 { color: var(--accent); }
 
+    /* Why-framing cards (three-tier context block between hero and demo) */
+    .why-list {
+      display: grid;
+      gap: 14px;
+      margin: 28px 0 8px;
+    }
+    .why-card {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 18px;
+      padding: 22px 24px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent-dim);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+    .why-card .why-num {
+      font-size: 1.6rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--accent);
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      padding-top: 2px;
+    }
+    .why-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+    .why-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .why-card p code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    @media (max-width: 640px) {
+      .why-card { grid-template-columns: 1fr; gap: 6px; padding: 18px 20px; }
+      .why-card .why-num { font-size: 1.2rem; }
+    }
+
     /* Code block */
     pre.code {
       background: var(--code-bg);
@@ -412,6 +461,38 @@
         <img src="state-transitions.svg" alt="12-second looping diagram: t=0 planner writes v1; t=1 executor caches v1; t=2 planner writes v2 and CCSStore invalidates executor's cache; t=3 executor refetches v2; final state tsc passes." width="1200" height="480" loading="lazy" />
         <figcaption>The happy path, in 12 seconds. The op log and real <code>tsc</code> result are in the casts below.</figcaption>
       </figure>
+    </div>
+  </section>
+
+  <section id="why">
+    <div class="container">
+      <h2>Why this exists.</h2>
+
+      <div class="why-list">
+        <article class="why-card">
+          <p class="why-num">1</p>
+          <div>
+            <h3>Coding sub-agents stay in sync on the artifacts they write.</h3>
+            <p>The task spec. The plan. The symbol table. The design note. When one sub-agent edits a shared artifact, the others see the new version on their next read — not the version they cached three seconds ago.</p>
+          </div>
+        </article>
+
+        <article class="why-card">
+          <p class="why-num">2</p>
+          <div>
+            <h3>Coding agents are increasingly multi-agent, and they share mutable state.</h3>
+            <p>Cursor's planner runs while the executor types. Claude Code spawns parallel sub-tasks. Factory fans out across worktrees. The work is concurrent; the assumption that "what I read is what's current" is implicit, untested, and silently false. agent-coherence makes it explicit and provable.</p>
+          </div>
+        </article>
+
+        <article class="why-card">
+          <p class="why-num">3</p>
+          <div>
+            <h3>Cache coherence — for the artifacts your agents share.</h3>
+            <p>The protocol every modern CPU uses to keep multi-core caches consistent, adapted for LLM agents that share mutable state. Same primitives: states per <code>(agent, artifact)</code>, invalidation on write, single-writer ordering. Same invariants: monotonic versions, no torn reads. Production-tested theory, new application surface.</p>
+          </div>
+        </article>
+      </div>
     </div>
   </section>
 
