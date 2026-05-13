@@ -116,27 +116,60 @@ path = sys.argv[1]
 with open(path) as f:
     header = json.loads(f.readline())
     events = [json.loads(l) for l in f if l.strip()]
+
 # Strip trailing exit ("x") events — players clear the terminal on exit,
 # which would blank the final frame and hide the punchline (tsc result).
 while events and events[-1][1] != "o":
     events.pop()
-# Shift all output events so the first one lands at t=0.1, killing the
-# Python/langgraph startup blank period that would otherwise dominate
-# visible playback time on loop.
-shift = 0
-if events:
-    shift = events[0][0] - 0.1
-    if shift > 0:
-        events = [[round(e[0] - shift, 4), *e[1:]] for e in events]
+
+# Re-pace the cast for human readability. Python's print() flushes all the
+# demo output in <5ms — visually everything appears at once. Split each
+# multi-line event into per-line events and re-time them so each line shows
+# up at a comfortable reading pace.
+#
+# Pacing rules (tuned for ~10 visible lines + tsc result):
+#   - op-log lines ([t+ N] ...) — 0.45s per line (dense, low information per line)
+#   - blank separators and the variant header — 0.6s (small visual break)
+#   - narration lines (planner:/executor:) — 0.7s each (the story beats)
+#   - tsc result — 1.2s pause before it shows (drum roll), then it's the
+#     final frame and agg's --last-frame-duration handles the loop pause
+def gap_for(line: str) -> float:
+    s = line.strip()
+    if not s:
+        return 0.4
+    if s.startswith("[t+"):
+        return 0.45
+    if s.startswith("---") or s.startswith("==="):
+        return 0.6
+    if s.startswith("tsc:"):
+        return 1.2
+    return 0.7
+
+expanded = []
+t = 0.1
+for ev in events:
+    payload = ev[2]
+    # Split on \r\n but preserve the line terminator on non-last chunks
+    parts = payload.split("\r\n")
+    for i, part in enumerate(parts):
+        is_last_chunk = (i == len(parts) - 1)
+        if is_last_chunk and part == "":
+            continue
+        content = part + ("\r\n" if not is_last_chunk else "")
+        expanded.append([round(t, 4), "o", content])
+        t += gap_for(part)
+
 # Shrink terminal height from the asciinema default (24 rows) to 14 — the
-# demo outputs ~12 lines and the extra 10 blank rows just make the rendered
-# GIF unnecessarily tall.
+# demo outputs ~12 lines and the extra ~10 blank rows just made the
+# rendered GIF unnecessarily tall.
 header["height"] = 14
-with open(path, 'w') as f:
+
+with open(path, "w") as f:
     f.write(json.dumps(header) + "\n")
-    for e in events:
-        f.write(json.dumps(e) + '\n')
-print(f"  trimmed {shift:.3f}s leading idle, stripped exit events, shrunk to 14 rows" if shift > 0 else "  cleaned trailing exit events, shrunk to 14 rows")
+    for e in expanded:
+        f.write(json.dumps(e) + "\n")
+total = expanded[-1][0] if expanded else 0
+print(f"  re-paced into {len(expanded)} events over {total:.2f}s + 3s last-frame pause")
 PYEOF
 
   echo "─── done: $cast ───────────────────────────────────────────────────"
