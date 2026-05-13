@@ -262,7 +262,108 @@
       text-align: center;
       margin: 14px 0 0;
     }
+
+    /* Hero state-transitions diagram */
+    .hero-diagram {
+      margin: 36px 0 0;
+      padding: 0;
+    }
+    .hero-diagram img {
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #0a0a0a 0%, #131418 100%);
+      display: block;
+    }
+    .hero-diagram figcaption {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      text-align: center;
+    }
+    .hero-diagram figcaption a { color: var(--accent); }
+
+    /* Cast cards */
+    .cast-card {
+      margin: 28px 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .cast-card.cast-failure {
+      border-left: 4px solid #fb7185;
+    }
+    .cast-card.cast-success {
+      border-left: 4px solid var(--accent);
+    }
+    .cast-card header {
+      padding: 22px 24px 18px;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .cast-num {
+      margin: 0;
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent);
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      letter-spacing: -0.04em;
+    }
+    .cast-card.cast-failure .cast-num { color: #fb7185; }
+    .cast-card header h3 {
+      margin: 0 0 6px;
+      font-size: 1.15rem;
+      letter-spacing: -0.01em;
+    }
+    .cast-meta {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+    .cast-meta code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    .cast-outcome {
+      display: inline-block;
+      margin-top: 4px;
+      font-weight: 600;
+      color: #fb7185;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    }
+    .cast-outcome.cast-outcome-good { color: var(--accent); }
+    .cast-player {
+      padding: 0 20px 20px;
+      min-height: 240px;
+    }
+    .cast-footnote {
+      margin: 28px 0 8px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.55;
+    }
+    .cast-footnote a { color: var(--accent); border-bottom: 1px dotted var(--accent-dim); }
+    .cast-footnote a:hover { border-bottom-style: solid; }
+
+    /* asciinema-player tweaks — match site palette */
+    .asciinema-player-wrapper {
+      border-radius: 8px;
+      overflow: hidden;
+    }
   </style>
+
+  <!-- asciinema-player (self-hosted casts; nothing uploaded externally) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.7.1/dist/bundle/asciinema-player.css">
 </head>
 <body>
 
@@ -305,21 +406,55 @@
       <div class="ctas">
         <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=code" rel="noopener">Book a 15-min call →</a>
         <a class="btn" href="https://github.com/hipvlady/agent-coherence" rel="noopener">View on GitHub</a>
-        <a class="btn" href="#demo">Watch the demo</a>
+        <a class="btn" href="#demo">Watch it run ↓</a>
       </div>
+
+      <figure class="hero-diagram">
+        <img src="state-transitions.svg" alt="12-second looping diagram: t=0 planner writes v1; t=1 executor caches v1; t=2 planner writes v2 and CCSStore invalidates executor's cache; t=3 executor refetches v2; final state tsc passes." width="1200" height="480" loading="lazy" />
+        <figcaption>The happy path, in 12 seconds. The op log and real <code>tsc</code> result are in the casts below.</figcaption>
+      </figure>
     </div>
   </section>
 
   <section id="demo">
     <div class="container">
-      <h2>The 90-second demo.</h2>
-      <p>Two scripted sub-agents share a task spec through CCSStore. Planner writes v1. Executor begins on v1. Planner discovers a fourth caller and writes v2 mid-flight. With agent-coherence, the executor's next read of the task spec is invalidated by the planner's v2 write before any rename is committed — executor pulls v2, completes four renames, real <code>tsc</code> reports a passing build. Without it: hard build failure.</p>
+      <h2>The recorded proof.</h2>
+      <p>Three variants on the same TypeScript refactor. The op log makes the protocol mechanism visible; the <code>tsc</code> result makes the application-level consequence visible. Real terminal output — nothing edited.</p>
 
-      <div class="demo-placeholder" id="demo-embed">
-        <strong>[demo recording — in progress]</strong>
-        2–3 minute capture · real <code>tsc</code> · real TypeScript project · scripted planner + executor through CCSStore.
-        Video will replace this placeholder once the recording is finalized.
-      </div>
+      <article class="cast-card cast-failure">
+        <header>
+          <p class="cast-num">1</p>
+          <div>
+            <h3>The failure your agents have today</h3>
+            <p class="cast-meta"><code>variant=context-cache</code> · executor never re-reads from the store; commits the v1 it captured at read time. Mirrors LLM context-window behavior. <span class="cast-outcome">→ tsc FAIL</span></p>
+          </div>
+        </header>
+        <div class="cast-player" id="cast-context-cache" data-cast="/code/casts/context-cache.cast"></div>
+      </article>
+
+      <article class="cast-card cast-failure">
+        <header>
+          <p class="cast-num">2</p>
+          <div>
+            <h3>The protocol-level proof</h3>
+            <p class="cast-meta"><code>variant=no-invalidation</code> · same code path, a single-line bus suppression — <code>disable_invalidation(store)</code>. Watch the op log: commit-time <code>get</code> is <code>[HIT]</code> (cache stayed SHARED at v1). Same broken build. <span class="cast-outcome">→ tsc FAIL</span></p>
+          </div>
+        </header>
+        <div class="cast-player" id="cast-no-invalidation" data-cast="/code/casts/no-invalidation.cast"></div>
+      </article>
+
+      <article class="cast-card cast-success">
+        <header>
+          <p class="cast-num">3</p>
+          <div>
+            <h3>With agent-coherence</h3>
+            <p class="cast-meta"><code>variant=with</code> · default <code>CCSStore</code>, lazy strategy. Planner's v2 write publishes invalidation before <code>write()</code> returns; executor's next <code>get</code> is <code>[MISS]</code>; refetches v2; commits all 5 files. <span class="cast-outcome cast-outcome-good">→ tsc OK</span></p>
+          </div>
+        </header>
+        <div class="cast-player" id="cast-with" data-cast="/code/casts/with.cast"></div>
+      </article>
+
+      <p class="cast-footnote">All three casts run on the as-checked-in <code>examples/refactor_demo/</code> in agent-coherence v0.7.1+. Reproduce locally: <code>./outreach/demo/record.sh all</code>. Source: <a href="https://github.com/hipvlady/agent-coherence/tree/main/examples/refactor_demo" rel="noopener">agent-coherence/examples/refactor_demo</a>.</p>
     </div>
   </section>
 
@@ -422,6 +557,17 @@ graph = builder.compile(store=store)
       </nav>
     </div>
   </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.7.1/dist/bundle/asciinema-player.min.js"></script>
+  <script>
+    // Self-hosted cast files — nothing uploaded to asciinema.org while the
+    // page is gated. Embed config: 1.5x speed, smart idle compression to 1.2s,
+    // dark theme matching the site palette.
+    const castConfig = { speed: 1.5, idleTimeLimit: 1.2, theme: 'dracula', fit: 'width' };
+    document.querySelectorAll('.cast-player[data-cast]').forEach(el => {
+      AsciinemaPlayer.create(el.dataset.cast, el, castConfig);
+    });
+  </script>
 
 </body>
 </html>

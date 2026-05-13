@@ -1,4 +1,7 @@
-# Asciinema casts — per-take recording artifacts.
-# Reproduce locally with: ./record.sh all
-# README documents the publish path; casts are not version-controlled.
+# Asciinema casts and rendered GIFs — per-take recording artifacts.
+# Reproduce locally with:
+#   ./record.sh all                                    # casts
+#   agg --speed 1.5 --theme '...' with.cast with.gif   # GIFs
+# README documents the publish path; these artifacts are not version-controlled.
 *.cast
+*.gif
