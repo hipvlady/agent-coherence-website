@@ -114,25 +114,29 @@ record_variant() {
 import json, sys
 path = sys.argv[1]
 with open(path) as f:
-    header_line = f.readline()
+    header = json.loads(f.readline())
     events = [json.loads(l) for l in f if l.strip()]
-# Strip trailing exit ("x") events — asciinema-player clears the terminal on
-# exit, which would blank the final frame and hide the punchline (tsc result).
+# Strip trailing exit ("x") events — players clear the terminal on exit,
+# which would blank the final frame and hide the punchline (tsc result).
 while events and events[-1][1] != "o":
     events.pop()
 # Shift all output events so the first one lands at t=0.1, killing the
 # Python/langgraph startup blank period that would otherwise dominate
-# visible playback time.
+# visible playback time on loop.
 shift = 0
 if events:
     shift = events[0][0] - 0.1
     if shift > 0:
         events = [[round(e[0] - shift, 4), *e[1:]] for e in events]
+# Shrink terminal height from the asciinema default (24 rows) to 14 — the
+# demo outputs ~12 lines and the extra 10 blank rows just make the rendered
+# GIF unnecessarily tall.
+header["height"] = 14
 with open(path, 'w') as f:
-    f.write(header_line)
+    f.write(json.dumps(header) + "\n")
     for e in events:
         f.write(json.dumps(e) + '\n')
-print(f"  trimmed {shift:.3f}s leading idle + stripped exit events" if shift > 0 else "  cleaned trailing exit events")
+print(f"  trimmed {shift:.3f}s leading idle, stripped exit events, shrunk to 14 rows" if shift > 0 else "  cleaned trailing exit events, shrunk to 14 rows")
 PYEOF
 
   echo "─── done: $cast ───────────────────────────────────────────────────"

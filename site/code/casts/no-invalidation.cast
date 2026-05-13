@@ -1,8 +1,7 @@
-{"version":2,"width":80,"height":24,"timestamp":1778679504,"idle_time_limit":1.2,"command":"cd '/Users/vladparakhin/projects/agent-coherence' && python -W ignore -m examples.refactor_demo.main --variant=no-invalidation 2>/dev/null","env":{"SHELL":"/bin/zsh"}}
+{"version": 2, "width": 80, "height": 14, "timestamp": 1778681508, "idle_time_limit": 1.2, "command": "cd '/Users/vladparakhin/projects/agent-coherence' && python -W ignore -m examples.refactor_demo.main --variant=no-invalidation 2>/dev/null", "env": {"SHELL": "/bin/zsh"}}
 [0.1, "o", "[t+  1] [MISS] op=put   agent=planner  key=task\r\n"]
 [0.101, "o", "[t+  2] [MISS] op=get   agent=executor key=task\r\n"]
 [0.103, "o", "[t+  3] [MISS] op=put   agent=planner  key=task\r\n"]
 [0.104, "o", "[t+  4] [HIT ] op=get   agent=executor key=task\r\n"]
-[0.107, "o", "\r\n--- variant: no-invalidation ---\r\nplanner: wrote spec v1 (3 callers)\r\nexecutor: read spec v1 (cached)\r\nplanner: wrote spec v2 (4 callers)\r\nexecutor: committed spec v1 (4 files renamed)\r\n"]
-[0.107, "o", "executor committed spec v1\r\n"]
-[1.593, "o", "tsc: FAIL (exit 2)\r\nsrc/utils/session.ts(4,10): error TS2305: Module '\"../auth\"' has no exported member 'validateUser'.\r\n"]
+[0.108, "o", "\r\n--- variant: no-invalidation ---\r\nplanner: wrote spec v1 (3 callers)\r\nexecutor: read spec v1 (cached)\r\nplanner: wrote spec v2 (4 callers)\r\nexecutor: committed spec v1 (4 files renamed)\r\nexecutor committed spec v1\r\n"]
+[1.648, "o", "tsc: FAIL (exit 2)\r\nsrc/utils/session.ts(4,10): error TS2305: Module '\"../auth\"' has no exported member 'validateUser'.\r\n"]
