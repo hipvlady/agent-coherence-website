@@ -530,28 +530,6 @@
     .col-card .col-meta strong { color: var(--text); font-weight: 600; }
     @media (max-width: 720px) { .cols-2 { grid-template-columns: 1fr; } }
 
-    /* Category pull-quote (locked two-liner) */
-    .category-summary {
-      margin: 28px auto 0;
-      max-width: 720px;
-      padding: 20px 24px;
-      border-left: 3px solid var(--accent);
-      background:
-        linear-gradient(90deg, rgba(94, 234, 212, 0.05), transparent 70%),
-        var(--surface);
-      border-radius: 4px;
-    }
-    .category-summary p {
-      margin: 0;
-      font-size: 1.02rem;
-      line-height: 1.6;
-      color: var(--text);
-    }
-    .category-summary p + p { margin-top: 6px; color: var(--muted); }
-    .category-summary em { color: var(--accent); font-style: normal; font-weight: 600; }
-    .category-summary a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent-dim); }
-    .category-summary a:hover { border-bottom-style: solid; }
-
     /* Agentic stack diagram */
     .stack {
       display: flex;
@@ -781,6 +759,18 @@
     footer.site a { color: var(--muted); margin-left: 18px; }
     footer.site a:hover { color: var(--text); }
     footer.site nav a:first-child { margin-left: 0; }
+    footer.site a.social-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      vertical-align: middle;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    footer.site a.social-icon:hover { color: var(--accent); border-color: var(--accent-dim); }
   </style>
 </head>
 <body>
@@ -869,10 +859,7 @@
         </div>
       </div>
 
-      <aside class="category-summary" aria-label="Category summary">
-        <p><em>Coherence for the artifacts your agents write</em> — not just the indexes they read.</p>
-      </aside>
-      <p style="margin-top:18px; color: var(--muted); font-size: 0.95rem;">Both layers are needed in a real production system. agent-coherence focuses on the write side.</p>
+      <p style="margin-top:24px; color: var(--muted); font-size: 0.95rem;">Both layers are needed in a real production system. agent-coherence focuses on the write side.</p>
     </div>
   </section>
 
@@ -1073,6 +1060,11 @@ graph = builder.compile(store=store)</pre>
         <a href="https://arxiv.org/abs/2603.15183" rel="noopener" data-cta-target="arxiv" data-cta-location="footer">arXiv</a>
         <a href="https://github.com/hipvlady/agent-coherence/discussions" rel="noopener" data-cta-target="discussions" data-cta-location="footer">Discussions</a>
         <a href="mailto:contact@agent-coherence.dev" data-cta-target="email" data-cta-location="footer">contact@agent-coherence.dev</a>
+        <a class="social-icon" href="https://www.linkedin.com/company/agent-coherence/about/" rel="noopener" aria-label="agent-coherence on LinkedIn" data-cta-target="linkedin" data-cta-location="footer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.44-2.13 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/>
+          </svg>
+        </a>
       </nav>
     </div>
   </footer>
