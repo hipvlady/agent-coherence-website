@@ -316,9 +316,9 @@
       <p>Two scripted sub-agents share a task spec through CCSStore. Planner writes v1. Executor begins on v1. Planner discovers a fourth caller and writes v2 mid-flight. With agent-coherence, the executor's next read of the task spec is invalidated by the planner's v2 write before any rename is committed — executor pulls v2, completes four renames, real <code>tsc</code> reports a passing build. Without it: hard build failure.</p>
 
       <div class="demo-placeholder" id="demo-embed">
-        <strong>[demo video — recording in progress]</strong>
-        2–3 minute clip · real <code>tsc</code> · real TypeScript project · scripted planner + executor through CCSStore.
-        See <code>docs/plans/2026-05-12-001-feat-cocoindex-positioning-coding-agent-wedge-plan.md</code> for the build plan.
+        <strong>[demo recording — in progress]</strong>
+        2–3 minute capture · real <code>tsc</code> · real TypeScript project · scripted planner + executor through CCSStore.
+        Video will replace this placeholder once the recording is finalized.
       </div>
     </div>
   </section>
