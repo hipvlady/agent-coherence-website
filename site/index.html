@@ -851,9 +851,9 @@
       <nav class="site" aria-label="Primary">
         <a href="#how">How</a>
         <a href="#frameworks">Frameworks</a>
-        <a href="/code/">Code</a>
+        <a href="/code/" data-cta-target="code-page" data-cta-location="nav">Code</a>
         <a href="#faq">FAQ</a>
-        <a href="https://github.com/hipvlady/agent-coherence" rel="noopener">GitHub</a>
+        <a href="https://github.com/hipvlady/agent-coherence?utm_source=agent-coherence.dev&utm_medium=nav&utm_campaign=launch" rel="noopener" data-cta-target="github" data-cta-location="nav">GitHub</a>
       </nav>
       <a class="btn primary header-cta" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_header&utm_campaign=launch" rel="noopener" data-cta-target="cal" data-cta-location="header">Book a call</a>
     </div>
@@ -879,8 +879,8 @@
 
       <div class="ctas">
         <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=launch" rel="noopener" data-cta-target="cal" data-cta-location="hero">Book a 15-min call →</a>
-        <a class="btn" href="https://github.com/hipvlady/agent-coherence" rel="noopener" data-cta-target="github" data-cta-location="hero">View on GitHub</a>
-        <a class="btn" href="https://arxiv.org/abs/2603.15183" rel="noopener" data-cta-target="arxiv" data-cta-location="hero">Read the paper</a>
+        <a class="btn" href="https://github.com/hipvlady/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=launch" rel="noopener" data-cta-target="github" data-cta-location="hero">View on GitHub</a>
+        <a class="btn" href="https://arxiv.org/abs/2603.15183?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=launch" rel="noopener" data-cta-target="arxiv" data-cta-location="hero">Read the paper</a>
       </div>
 
       <div class="stats">
@@ -918,7 +918,7 @@
           <h3>Agents are themselves the source of truth.</h3>
           <p>The agents write — they collaborate on shared plans, edit specs, mutate memory, hand off scratchpads. You need a <strong>coherence protocol</strong> that detects stale reads and enforces single-writer ordering when one agent commits.</p>
           <p style="margin: 12px 0 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--text);">Failure modes caught:</strong> stale reads · shared memory pollution · cascading errors · context handoff drift · concurrent-write conflicts.</p>
-          <p class="col-meta"><strong>Examples:</strong> multi-agent planners, parallel sub-agents editing a spec, <a href="/code/">coding agents collaborating on a refactor</a>, research crews mutating shared notes.</p>
+          <p class="col-meta"><strong>Examples:</strong> multi-agent planners, parallel sub-agents editing a spec, <a href="/code/" data-cta-target="code-page" data-cta-location="write-side-card-inline">coding agents collaborating on a refactor</a>, research crews mutating shared notes.</p>
         </div>
       </div>
 
@@ -1019,10 +1019,10 @@ graph = builder.compile(store=store)</pre>
       <h2>Built for production-grade trust.</h2>
 
       <ul class="trust-list">
-        <li><span class="tag">Open</span>Apache-2.0 license, public on <a href="https://github.com/hipvlady/agent-coherence" rel="noopener">GitHub</a></li>
+        <li><span class="tag">Open</span>Apache-2.0 license, public on <a href="https://github.com/hipvlady/agent-coherence?utm_source=agent-coherence.dev&utm_medium=trust&utm_campaign=launch" rel="noopener" data-cta-target="github" data-cta-location="trust">GitHub</a></li>
         <li><span class="tag">Composable</span>Protocol-first and composable — slots into the agentic shared services layer without rewriting agent code or locking you to a runtime</li>
         <li><span class="tag">Verified</span>Protocol safety properties model-checked with TLA+/TLC in CI</li>
-        <li><span class="tag">Published</span><a href="https://arxiv.org/abs/2603.15183" rel="noopener">arXiv 2603.15183</a> — formal protocol and simulation results</li>
+        <li><span class="tag">Published</span><a href="https://arxiv.org/abs/2603.15183?utm_source=agent-coherence.dev&utm_medium=trust&utm_campaign=launch" rel="noopener" data-cta-target="arxiv" data-cta-location="trust">arXiv 2603.15183</a> — formal protocol and simulation results</li>
         <li><span class="tag">Supply chain</span>PyPI Trusted Publishers (OIDC), PEP 740 attestations, CycloneDX SBOM</li>
         <li><span class="tag">Diagnose</span><code>ccs-diagnose</code> — zero-network stale-read detector for existing graphs</li>
         <li><span class="tag">Recovery</span>Crash-recovery sweep reclaims stale grants when agents OOM-kill or livelock</li>
@@ -1094,7 +1094,7 @@ graph = builder.compile(store=store)</pre>
 
         <details class="faq-item">
           <summary>What happens when two agents try to write to the same artifact?</summary>
-          <p>The protocol enforces single-writer exclusivity. Only one agent holds write permission at a time; concurrent writes are prevented at the protocol level, not "resolved" by an append-only reducer that produces duplicates or unexpected list nesting. For workloads where concurrent writes are semantically composable, CRDTs are the right tool — see the <a href="https://github.com/hipvlady/agent-coherence/blob/main/docs/why-coherence-matters.md" rel="noopener">Why Coherence Matters</a> doc for the layered model.</p>
+          <p>The protocol enforces single-writer exclusivity. Only one agent holds write permission at a time; concurrent writes are prevented at the protocol level, not "resolved" by an append-only reducer that produces duplicates or unexpected list nesting. For workloads where concurrent writes are semantically composable, CRDTs are the right tool — see the <a href="https://github.com/hipvlady/agent-coherence/blob/main/docs/why-coherence-matters.md?utm_source=agent-coherence.dev&utm_medium=faq&utm_campaign=launch" rel="noopener" data-cta-target="github-doc" data-cta-location="faq">Why Coherence Matters</a> doc for the layered model.</p>
         </details>
 
         <details class="faq-item">
@@ -1127,12 +1127,12 @@ graph = builder.compile(store=store)</pre>
     <div class="container">
       <div>© <span id="year">2026</span> agent-coherence · Apache-2.0</div>
       <nav>
-        <a href="https://github.com/hipvlady/agent-coherence" rel="noopener" data-cta-target="github" data-cta-location="footer">GitHub</a>
-        <a href="https://pypi.org/project/agent-coherence/" rel="noopener" data-cta-target="pypi" data-cta-location="footer">PyPI</a>
-        <a href="https://arxiv.org/abs/2603.15183" rel="noopener" data-cta-target="arxiv" data-cta-location="footer">arXiv</a>
-        <a href="https://github.com/hipvlady/agent-coherence/discussions" rel="noopener" data-cta-target="discussions" data-cta-location="footer">Discussions</a>
+        <a href="https://github.com/hipvlady/agent-coherence?utm_source=agent-coherence.dev&utm_medium=footer&utm_campaign=launch" rel="noopener" data-cta-target="github" data-cta-location="footer">GitHub</a>
+        <a href="https://pypi.org/project/agent-coherence/?utm_source=agent-coherence.dev&utm_medium=footer&utm_campaign=launch" rel="noopener" data-cta-target="pypi" data-cta-location="footer">PyPI</a>
+        <a href="https://arxiv.org/abs/2603.15183?utm_source=agent-coherence.dev&utm_medium=footer&utm_campaign=launch" rel="noopener" data-cta-target="arxiv" data-cta-location="footer">arXiv</a>
+        <a href="https://github.com/hipvlady/agent-coherence/discussions?utm_source=agent-coherence.dev&utm_medium=footer&utm_campaign=launch" rel="noopener" data-cta-target="discussions" data-cta-location="footer">Discussions</a>
         <a href="mailto:contact@agent-coherence.dev" data-cta-target="email" data-cta-location="footer">contact@agent-coherence.dev</a>
-        <a class="social-icon" href="https://www.linkedin.com/company/agent-coherence/about/" rel="noopener" aria-label="agent-coherence on LinkedIn" data-cta-target="linkedin" data-cta-location="footer">
+        <a class="social-icon" href="https://www.linkedin.com/company/agent-coherence/about/?utm_source=agent-coherence.dev&utm_medium=footer&utm_campaign=launch" rel="noopener me" aria-label="agent-coherence on LinkedIn" data-cta-target="linkedin" data-cta-location="footer">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.44-2.13 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/>
           </svg>
