@@ -19,26 +19,29 @@
   </defs>
 
   <style>
-    /* 12s total loop. Five frames, each 20% = 2.4s visible. */
+    /* 12s total loop. Five frames at 0/20/40/60/80% — step-end timing so
+       opacity jumps instantly between phases (no fade overlap that would
+       layer two phases' text on top of each other during transitions). */
     .phase { opacity: 0; }
-    .phase-0 { animation: phase0 12s infinite; }
-    .phase-1 { animation: phase1 12s infinite; }
-    .phase-2 { animation: phase2 12s infinite; }
-    .phase-3 { animation: phase3 12s infinite; }
-    .phase-4 { animation: phase4 12s infinite; }
+    .phase-0 { animation: phase0 12s step-end infinite; }
+    .phase-1 { animation: phase1 12s step-end infinite; }
+    .phase-2 { animation: phase2 12s step-end infinite; }
+    .phase-3 { animation: phase3 12s step-end infinite; }
+    .phase-4 { animation: phase4 12s step-end infinite; }
 
-    @keyframes phase0 { 0%, 18% { opacity: 1; } 22%, 100% { opacity: 0; } }
-    @keyframes phase1 { 0%, 18% { opacity: 0; } 22%, 38% { opacity: 1; } 42%, 100% { opacity: 0; } }
-    @keyframes phase2 { 0%, 38% { opacity: 0; } 42%, 58% { opacity: 1; } 62%, 100% { opacity: 0; } }
-    @keyframes phase3 { 0%, 58% { opacity: 0; } 62%, 78% { opacity: 1; } 82%, 100% { opacity: 0; } }
-    @keyframes phase4 { 0%, 78% { opacity: 0; } 82%, 100% { opacity: 1; } }
+    @keyframes phase0 { 0% { opacity: 1; } 20% { opacity: 0; } }
+    @keyframes phase1 { 0% { opacity: 0; } 20% { opacity: 1; } 40% { opacity: 0; } }
+    @keyframes phase2 { 0% { opacity: 0; } 40% { opacity: 1; } 60% { opacity: 0; } }
+    @keyframes phase3 { 0% { opacity: 0; } 60% { opacity: 1; } 80% { opacity: 0; } }
+    @keyframes phase4 { 0% { opacity: 0; } 80% { opacity: 1; } 100% { opacity: 1; } }
 
-    /* Flash highlight on the invalidation event (phase 2) */
-    .invalidation-flash { animation: invalidationFlash 12s infinite; }
+    /* Flash highlight on the invalidation event (during phase 2 only) */
+    .invalidation-flash { animation: invalidationFlash 12s step-end infinite; }
     @keyframes invalidationFlash {
-      0%, 42% { opacity: 0; }
-      44%, 50% { opacity: 1; }
-      54%, 100% { opacity: 0; }
+      0% { opacity: 0; }
+      40% { opacity: 1; }
+      50% { opacity: 0; }
+      100% { opacity: 0; }
     }
 
     /* Static labels never animate */

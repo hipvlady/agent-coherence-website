@@ -1,8 +1,7 @@
-{"version":3,"term":{"cols":80,"rows":24},"timestamp":1778667088,"idle_time_limit":1.2,"command":"cd '/Users/vladparakhin/projects/agent-coherence' && python -W ignore -m examples.refactor_demo.main --variant=with 2>/dev/null","env":{"SHELL":"/bin/zsh"}}
-[1.611, "o", "[t+  1] [MISS] op=put   agent=planner  key=task\r\n"]
-[0.002, "o", "[t+  2] [MISS] op=get   agent=executor key=task\r\n"]
-[0.001, "o", "[t+  3] [MISS] op=put   agent=planner  key=task\r\n"]
-[0.002, "o", "[t+  4] [MISS] op=get   agent=executor key=task\r\n"]
-[0.004, "o", "\r\n--- variant: with ---\r\nplanner: wrote spec v1 (3 callers)\r\nexecutor: read spec v1 (cached)\r\nplanner: wrote spec v2 (4 callers)\r\nexecutor: committed spec v2 (5 files renamed)\r\nexecutor committed spec v2\r\n"]
-[1.958, "o", "tsc: OK\r\n"]
-[0.199, "x", "0"]
+{"version":2,"width":80,"height":24,"timestamp":1778679507,"idle_time_limit":1.2,"command":"cd '/Users/vladparakhin/projects/agent-coherence' && python -W ignore -m examples.refactor_demo.main --variant=with 2>/dev/null","env":{"SHELL":"/bin/zsh"}}
+[0.1, "o", "[t+  1] [MISS] op=put   agent=planner  key=task\r\n"]
+[0.101, "o", "[t+  2] [MISS] op=get   agent=executor key=task\r\n"]
+[0.102, "o", "[t+  3] [MISS] op=put   agent=planner  key=task\r\n"]
+[0.103, "o", "[t+  4] [MISS] op=get   agent=executor key=task\r\n"]
+[0.106, "o", "\r\n--- variant: with ---\r\nplanner: wrote spec v1 (3 callers)\r\nexecutor: read spec v1 (cached)\r\nplanner: wrote spec v2 (4 callers)\r\nexecutor: committed spec v2 (5 files renamed)\r\nexecutor committed spec v2\r\n"]
+[1.437, "o", "tsc: OK\r\n"]

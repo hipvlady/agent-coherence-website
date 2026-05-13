@@ -85,20 +85,55 @@ fi
 record_variant() {
   local variant="$1"
   local cast="$CAST_DIR/$variant.cast"
+  local cast_v3="$cast.v3"
 
   echo "─── recording variant=$variant → $cast ────────────────────────────"
 
-  # --idle-time-limit 1.2 → asciinema smart-compresses any wait > 1.2s
+  # asciinema rec writes v3 cast format by default; we downgrade to v2 below
+  # because asciinema-player 3.x (used for the /code embed) reads v2 natively.
+  # --idle-time-limit 1.2 → smart-compresses any wait > 1.2s
   # --cols 120 --rows 32  → lock terminal geometry so re-takes look consistent
   # --overwrite           → re-recording is the normal path
-  # --command run from the agent-coherence repo so module discovery works
   asciinema rec \
     --idle-time-limit 1.2 \
     --cols 120 \
     --rows 32 \
     --overwrite \
     --command "cd '$AGENT_COHERENCE_REPO' && python -W ignore -m examples.refactor_demo.main --variant=$variant 2>/dev/null" \
-    "$cast"
+    "$cast_v3"
+
+  echo "─── converting to asciicast v2 (for asciinema-player) ─────────────"
+  asciinema convert --overwrite --output-format=asciicast-v2 "$cast_v3" "$cast"
+  rm -f "$cast_v3"
+
+  echo "─── trimming leading idle (Python/langgraph startup) ──────────────"
+  # The demo's first output event lands ~1s in due to Python startup overhead.
+  # Looped playback would re-introduce that gap every cycle, so we shift every
+  # event timestamp by -(first_t - 0.1) so the cast starts almost immediately.
+  python3 - "$cast" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+with open(path) as f:
+    header_line = f.readline()
+    events = [json.loads(l) for l in f if l.strip()]
+# Strip trailing exit ("x") events — asciinema-player clears the terminal on
+# exit, which would blank the final frame and hide the punchline (tsc result).
+while events and events[-1][1] != "o":
+    events.pop()
+# Shift all output events so the first one lands at t=0.1, killing the
+# Python/langgraph startup blank period that would otherwise dominate
+# visible playback time.
+shift = 0
+if events:
+    shift = events[0][0] - 0.1
+    if shift > 0:
+        events = [[round(e[0] - shift, 4), *e[1:]] for e in events]
+with open(path, 'w') as f:
+    f.write(header_line)
+    for e in events:
+        f.write(json.dumps(e) + '\n')
+print(f"  trimmed {shift:.3f}s leading idle + stripped exit events" if shift > 0 else "  cleaned trailing exit events")
+PYEOF
 
   echo "─── done: $cast ───────────────────────────────────────────────────"
   echo "Preview:  asciinema play '$cast'"

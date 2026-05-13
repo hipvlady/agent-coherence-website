@@ -342,9 +342,15 @@
       font-family: ui-monospace, "SF Mono", Menlo, monospace;
     }
     .cast-outcome.cast-outcome-good { color: var(--accent); }
-    .cast-player {
-      padding: 0 20px 20px;
-      min-height: 240px;
+    .cast-gif {
+      display: block;
+      width: calc(100% - 40px);
+      max-width: 100%;
+      height: auto;
+      margin: 0 20px 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #0a0a0a;
     }
     .cast-footnote {
       margin: 28px 0 8px;
@@ -355,15 +361,8 @@
     .cast-footnote a { color: var(--accent); border-bottom: 1px dotted var(--accent-dim); }
     .cast-footnote a:hover { border-bottom-style: solid; }
 
-    /* asciinema-player tweaks — match site palette */
-    .asciinema-player-wrapper {
-      border-radius: 8px;
-      overflow: hidden;
-    }
   </style>
 
-  <!-- asciinema-player (self-hosted casts; nothing uploaded externally) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.7.1/dist/bundle/asciinema-player.css">
 </head>
 <body>
 
@@ -429,7 +428,7 @@
             <p class="cast-meta"><code>variant=context-cache</code> · executor never re-reads from the store; commits the v1 it captured at read time. Mirrors LLM context-window behavior. <span class="cast-outcome">→ tsc FAIL</span></p>
           </div>
         </header>
-        <div class="cast-player" id="cast-context-cache" data-cast="/code/casts/context-cache.cast"></div>
+        <img class="cast-gif" src="/code/gifs/context-cache.gif" alt="Terminal recording: planner writes v1, executor reads v1, planner writes v2, executor commits cached v1 with 4 files renamed, tsc FAIL with TS2305 error on src/utils/session.ts" loading="lazy" width="800" height="540" />
       </article>
 
       <article class="cast-card cast-failure">
@@ -440,7 +439,7 @@
             <p class="cast-meta"><code>variant=no-invalidation</code> · same code path, a single-line bus suppression — <code>disable_invalidation(store)</code>. Watch the op log: commit-time <code>get</code> is <code>[HIT]</code> (cache stayed SHARED at v1). Same broken build. <span class="cast-outcome">→ tsc FAIL</span></p>
           </div>
         </header>
-        <div class="cast-player" id="cast-no-invalidation" data-cast="/code/casts/no-invalidation.cast"></div>
+        <img class="cast-gif" src="/code/gifs/no-invalidation.gif" alt="Terminal recording: same as context-cache but the op log shows [HIT] on the commit-time executor get, proving the cache stayed SHARED at v1; same tsc FAIL outcome" loading="lazy" width="800" height="540" />
       </article>
 
       <article class="cast-card cast-success">
@@ -451,10 +450,10 @@
             <p class="cast-meta"><code>variant=with</code> · default <code>CCSStore</code>, lazy strategy. Planner's v2 write publishes invalidation before <code>write()</code> returns; executor's next <code>get</code> is <code>[MISS]</code>; refetches v2; commits all 5 files. <span class="cast-outcome cast-outcome-good">→ tsc OK</span></p>
           </div>
         </header>
-        <div class="cast-player" id="cast-with" data-cast="/code/casts/with.cast"></div>
+        <img class="cast-gif" src="/code/gifs/with.gif" alt="Terminal recording: planner writes v1, executor reads v1, planner writes v2, executor's next get is [MISS] and refetches v2, commits 5 files renamed, tsc OK" loading="lazy" width="800" height="540" />
       </article>
 
-      <p class="cast-footnote">All three casts run on the as-checked-in <code>examples/refactor_demo/</code> in agent-coherence v0.7.1+. Reproduce locally: <code>./outreach/demo/record.sh all</code>. Source: <a href="https://github.com/hipvlady/agent-coherence/tree/main/examples/refactor_demo" rel="noopener">agent-coherence/examples/refactor_demo</a>.</p>
+      <p class="cast-footnote">All three recordings come from <code>examples/refactor_demo/</code> in agent-coherence v0.7.1+ — real terminal output captured via <a href="https://asciinema.org/" rel="noopener">asciinema</a> and rendered to GIF with <a href="https://github.com/asciinema/agg" rel="noopener">agg</a>. Reproduce locally: <code>./outreach/demo/record.sh all</code>. Source: <a href="https://github.com/hipvlady/agent-coherence/tree/main/examples/refactor_demo" rel="noopener">agent-coherence/examples/refactor_demo</a>.</p>
     </div>
   </section>
 
@@ -558,16 +557,6 @@ graph = builder.compile(store=store)
     </div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.7.1/dist/bundle/asciinema-player.min.js"></script>
-  <script>
-    // Self-hosted cast files — nothing uploaded to asciinema.org while the
-    // page is gated. Embed config: 1.5x speed, smart idle compression to 1.2s,
-    // dark theme matching the site palette.
-    const castConfig = { speed: 1.5, idleTimeLimit: 1.2, theme: 'dracula', fit: 'width' };
-    document.querySelectorAll('.cast-player[data-cast]').forEach(el => {
-      AsciinemaPlayer.create(el.dataset.cast, el, castConfig);
-    });
-  </script>
 
 </body>
 </html>
