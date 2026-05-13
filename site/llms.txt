@@ -1,11 +1,11 @@
 # agent-coherence
 
-> agent-coherence is an open-source Python library that detects stale reads in multi-agent LLM systems and serves the fresh version on the next read instead of rebroadcasting the full artifact every turn. It implements a MESI-style cache-coherence protocol adapted from CPU cache design, with drop-in adapters for LangGraph, CrewAI, AutoGen, and any custom orchestrator. The protocol operates on artifacts, not model responses, so it is model-provider-neutral (works the same with Anthropic, OpenAI, Google, Mistral, and open-source models).
+> agent-coherence is an open-source Python library that detects stale reads in multi-agent LLM systems and serves the current version on the next read instead of rebroadcasting the full artifact every turn. It implements a MESI-style cache-coherence protocol adapted from CPU cache design, with drop-in adapters for LangGraph, CrewAI, AutoGen, and any custom orchestrator. The protocol operates on artifacts, not model responses, so it is model-provider-neutral (works the same with Anthropic, OpenAI, Google, Mistral, and open-source models).
 
 ## What it does
 
 - **Detects stale reads.** When agent B reads an artifact after agent A has modified it, agent-coherence flags the stale read instead of silently serving outdated data. Most frameworks have no such mechanism; LangGraph's BaseStore documentation explicitly states it "does not natively support optimistic locking, vector versioning, or invalidation protocols."
-- **Serves the fresh version on the next read.** Rather than broadcasting the full artifact to every agent on every turn (the default in CrewAI, AutoGen, and most LangGraph patterns), agent-coherence sends ~12-token invalidation signals when state changes and only re-fetches on the next read.
+- **Serves the current version on the next read.** Rather than broadcasting the full artifact to every agent on every turn (the default in CrewAI, AutoGen, and most LangGraph patterns), agent-coherence sends ~12-token invalidation signals when state changes and only re-fetches on the next read.
 - **Enforces single-writer exclusivity per artifact.** Concurrent writes are prevented at the protocol level — they are not "resolved" by an append-only reducer that produces duplicates or unexpected list nesting.
 - **Records what each agent saw.** Per-agent content-audit log with SHA-256 hashes per read, plus a sequence-numbered state-transition log. These streams are the data substrate for run replay and stale-read forensics.
 

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>agent-coherence for coding agents — collaborate on a refactor without trampling edits</title>
+
+  <!--
+    STATUS: DRAFT — NOT FOR PUBLICATION before 2026-05-16 discovery synthesis.
+    Per requirements doc R14 + plan Unit 8.
+    This page is intentionally noindex, not linked from /, and absent from sitemap.xml.
+    Goes live only on the coding-agent-dominant branch (Decision 6).
+  -->
+
+  <meta name="description" content="Coding sub-agents collaborating on a refactor — without trampling each other's edits. Write-side coherence for coding agents.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/favicon.svg">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="color-scheme" content="dark light">
+
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #131418;
+      --surface-2: #1a1c22;
+      --border: #262830;
+      --text: #e8e8ea;
+      --muted: #9095a0;
+      --accent: #5eead4;
+      --accent-dim: #14b8a6;
+      --code-bg: #11131a;
+      --max-width: 920px;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --surface: #f7f8fa;
+        --surface-2: #eef0f4;
+        --border: #e3e5ea;
+        --text: #0a0a0a;
+        --muted: #5a6070;
+        --accent: #0d9488;
+        --accent-dim: #14b8a6;
+        --code-bg: #f1f3f7;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 18px; }
+    h2 { font-size: 1.5rem; letter-spacing: -0.01em; margin: 48px 0 14px; }
+    h3 { margin: 0 0 8px; font-size: 1.08rem; font-weight: 600; }
+    p.lead { font-size: 1.18rem; color: var(--muted); line-height: 1.55; }
+
+    /* Header */
+    header.site {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 0;
+      background: rgba(10, 10, 10, 0.78);
+      backdrop-filter: saturate(180%) blur(14px);
+      -webkit-backdrop-filter: saturate(180%) blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    @media (prefers-color-scheme: light) {
+      header.site { background: rgba(255, 255, 255, 0.78); }
+    }
+    header.site .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      color: var(--text);
+      font-size: 1.02rem;
+      letter-spacing: -0.01em;
+      flex-shrink: 0;
+    }
+    .brand:hover { text-decoration: none; color: var(--text); }
+    .brand-logo { width: 22px; height: 22px; color: var(--accent); flex-shrink: 0; }
+    .brand .dot { color: var(--accent); }
+    nav.site {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      flex: 1;
+      justify-content: center;
+    }
+    nav.site a { color: var(--muted); font-size: 0.92rem; transition: color 0.15s ease; }
+    nav.site a:hover { color: var(--text); text-decoration: none; }
+    nav.site a.current { color: var(--text); }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: var(--surface);
+      transition: all 0.15s ease;
+    }
+    .btn:hover { background: var(--surface-2); text-decoration: none; }
+    .btn.primary { background: var(--accent); color: #06231f; border-color: var(--accent); }
+    .btn.primary:hover { background: var(--accent-dim); }
+    .header-cta { padding: 8px 16px; font-size: 0.9rem; flex-shrink: 0; }
+    @media (max-width: 760px) {
+      nav.site { display: none; }
+      header.site { padding: 12px 0; }
+      .header-cta { padding: 7px 14px; font-size: 0.85rem; }
+    }
+
+    /* Hero */
+    section.hero { padding: 64px 0 24px; }
+    .eyebrow {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 14px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      margin-bottom: 18px;
+    }
+    .badge .ver { color: var(--accent); }
+    .ctas { display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0 8px; }
+
+    /* Sections */
+    section { padding: 28px 0; }
+    .container > p { color: var(--muted); }
+    .container > p strong { color: var(--text); }
+
+    /* Demo embed placeholder */
+    .demo-placeholder {
+      margin: 24px 0;
+      padding: 64px 24px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+    .demo-placeholder strong { color: var(--text); display: block; margin-bottom: 6px; font-size: 1rem; }
+
+    /* Scenario steps */
+    .steps {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0 8px;
+      border-top: 1px solid var(--border);
+    }
+    .step {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 18px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step .tick { color: var(--accent); font-family: ui-monospace, "SF Mono", Menlo, monospace; font-weight: 600; font-size: 0.85rem; padding-top: 2px; }
+    .step h3 { margin: 0 0 4px; font-size: 1rem; }
+    .step p { margin: 0; color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
+    .step.bad h3 { color: #fb7185; }
+    .step.good h3 { color: var(--accent); }
+
+    /* Code block */
+    pre.code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      overflow-x: auto;
+      font-size: 0.875rem;
+      line-height: 1.55;
+      color: var(--text);
+      margin: 16px 0 24px;
+    }
+    pre.code .cm { color: var(--muted); }
+    pre.code .kw { color: #c084fc; }
+    pre.code .str { color: var(--accent); }
+
+    /* Trajectory callout */
+    .trajectory {
+      margin: 32px 0 8px;
+      padding: 22px 24px;
+      border-left: 3px solid var(--accent);
+      background:
+        linear-gradient(90deg, rgba(94, 234, 212, 0.06), transparent 65%),
+        var(--surface);
+      border-radius: 4px;
+    }
+    .trajectory p { margin: 0; color: var(--text); font-size: 1.02rem; line-height: 1.55; }
+    .trajectory p + p { margin-top: 10px; color: var(--muted); font-size: 0.95rem; }
+
+    /* CTA strip */
+    .cta-strip {
+      margin: 48px 0 24px;
+      padding: 32px 28px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .cta-strip h3 { margin: 0; font-size: 1.2rem; }
+    .cta-strip p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; }
+
+    /* Footer */
+    footer.site {
+      border-top: 1px solid var(--border);
+      padding: 36px 0 56px;
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer.site .container { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    footer.site a { color: var(--muted); margin-left: 14px; }
+    footer.site a:first-child { margin-left: 0; }
+    footer.site a:hover { color: var(--accent); text-decoration: none; }
+
+    .draft-banner {
+      position: relative;
+      background: rgba(251, 113, 133, 0.08);
+      border: 1px solid rgba(251, 113, 133, 0.35);
+      color: #fb7185;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      text-align: center;
+      margin: 14px 0 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site">
+    <div class="container">
+      <a class="brand" href="/" aria-label="agent-coherence home">
+        <svg class="brand-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="6" cy="7" r="2.6" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="18" cy="7" r="2.6" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="12" cy="18" r="2.6" fill="currentColor" stroke="currentColor" stroke-width="1.6"/>
+          <line x1="8.6" y1="7" x2="15.4" y2="7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="7.3" y1="9.2" x2="11" y2="15.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="16.7" y1="9.2" x2="13" y2="15.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <span>agent-coherence<span class="dot">.</span></span>
+      </a>
+      <nav class="site" aria-label="Primary">
+        <a href="/#how">How</a>
+        <a href="/#frameworks">Frameworks</a>
+        <a href="/#stack">Stack</a>
+        <a class="current" href="/code/">Code</a>
+        <a href="/#faq">FAQ</a>
+        <a href="https://github.com/hipvlady/agent-coherence" rel="noopener">GitHub</a>
+      </nav>
+      <a class="btn primary header-cta" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_header&utm_campaign=code" rel="noopener" data-cta="book-a-call-header-code">Book a call</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <p class="draft-banner">DRAFT · noindex · publishes only after 2026-05-16 discovery synthesis + coding-agent-dominant branch.</p>
+  </div>
+
+  <section class="hero">
+    <div class="container">
+      <p class="eyebrow">Coding agents · write-side coherence</p>
+      <span class="badge">v<span class="ver">0.7</span> · Apache-2.0 · PyPI</span>
+      <h1>Coding sub-agents collaborating on a refactor — without trampling each other's edits.</h1>
+      <p class="lead">Cursor's planner-executor sub-agents, Claude Code's sub-task workers, Factory's parallel runs, Opencode's planning loops — they all share state through a <strong>task spec</strong>. When one sub-agent writes v2 of that spec mid-flight, the others keep operating on v1. agent-coherence detects the moment of divergence and serves the current version on the next read — before any stale commit lands in your repo.</p>
+
+      <div class="ctas">
+        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=code" rel="noopener">Book a 15-min call →</a>
+        <a class="btn" href="https://github.com/hipvlady/agent-coherence" rel="noopener">View on GitHub</a>
+        <a class="btn" href="#demo">Watch the demo</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="demo">
+    <div class="container">
+      <h2>The 90-second demo.</h2>
+      <p>Two scripted sub-agents share a task spec through CCSStore. Planner writes v1. Executor begins on v1. Planner discovers a fourth caller and writes v2 mid-flight. With agent-coherence, the executor's next read of the task spec is invalidated by the planner's v2 write before any rename is committed — executor pulls v2, completes four renames, real <code>tsc</code> reports a passing build. Without it: hard build failure.</p>
+
+      <div class="demo-placeholder" id="demo-embed">
+        <strong>[demo video — recording in progress]</strong>
+        2–3 minute clip · real <code>tsc</code> · real TypeScript project · scripted planner + executor through CCSStore.
+        See <code>docs/plans/2026-05-12-001-feat-cocoindex-positioning-coding-agent-wedge-plan.md</code> for the build plan.
+      </div>
+    </div>
+  </section>
+
+  <section id="scenario">
+    <div class="container">
+      <h2>The exact moment things diverge.</h2>
+      <p>Planner sub-agent and executor sub-agent are working on the same refactor. Both read and write the same shared artifact: a task spec describing what to rename and where.</p>
+
+      <div class="steps">
+        <div class="step">
+          <span class="tick">t=0</span>
+          <div>
+            <h3>Planner writes v1 of the task spec.</h3>
+            <p>"Rename <code>validateUser</code> → <code>authenticateUser</code>. Update 3 callers: <code>middleware.ts</code>, <code>login.ts</code>, <code>refresh.ts</code>."</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="tick">t=1</span>
+          <div>
+            <h3>Executor reads v1, begins.</h3>
+            <p>Cached locally per the MESI protocol; ready to rename three callers.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="tick">t=2</span>
+          <div>
+            <h3>Planner discovers a fourth caller. Writes v2.</h3>
+            <p>"…and <code>session.ts</code>." Coordinator publishes an invalidation event to peers holding the v1 cache — synchronously, before <code>write()</code> returns.</p>
+          </div>
+        </div>
+        <div class="step bad">
+          <span class="tick">t=3a</span>
+          <div>
+            <h3>Without coherence: executor commits on stale v1.</h3>
+            <p>Three callers renamed; <code>session.ts</code> still references <code>validateUser</code>. <code>tsc</code> fails: "Cannot find name 'validateUser'." Hard build failure, silently introduced by an agent that thought it had the latest plan.</p>
+          </div>
+        </div>
+        <div class="step good">
+          <span class="tick">t=3b</span>
+          <div>
+            <h3>With coherence: executor's next read pulls v2.</h3>
+            <p>The cache is INVALID; the next <code>get()</code> refetches v2; executor completes four renames; <code>tsc</code> passes. Prevention, not post-hoc repair.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="container">
+      <h2>How it ships into your coding-agent stack.</h2>
+      <p>The task spec is just an artifact in <code>CCSStore</code> — a LangGraph <code>BaseStore</code> drop-in. Both sub-agents share the same store; the MESI protocol does the rest. No node-code changes.</p>
+
+      <pre class="code"><span class="cm"># Coding-agent flow — planner and executor share a task spec via CCSStore</span>
+<span class="kw">from</span> langgraph.store.memory <span class="kw">import</span> InMemoryStore  <span class="cm"># before</span>
+<span class="kw">from</span> ccs.adapters <span class="kw">import</span> CCSStore                  <span class="cm"># after</span>
+
+store = CCSStore(strategy=<span class="str">"lazy"</span>)
+graph = builder.compile(store=store)
+
+<span class="cm"># Planner writes v2; CCSStore publishes invalidation to peers</span>
+<span class="cm"># before write() returns. Executor's next get() is guaranteed</span>
+<span class="cm"># to pull the current version — no stale-read window.</span></pre>
+
+      <p>The same protocol works on CrewAI and AutoGen via their adapters, and on custom orchestrators via <code>CoherenceAdapterCore</code>. Vendor-neutral across Anthropic, OpenAI, Google, Mistral, and open-source models — the protocol operates on artifacts, not model responses.</p>
+    </div>
+  </section>
+
+  <section id="trajectory">
+    <div class="container">
+      <h2>Why this matters now.</h2>
+      <aside class="trajectory">
+        <p>Today's Cursor and Claude Code sub-agents run on <strong>frozen specs</strong>: the planner finishes, freezes a plan, then the executor runs.</p>
+        <p>Tomorrow's don't. Deep Agents already does live re-planning. As soon as planners and executors run in parallel, frozen specs become stale specs, and stale specs become silent build failures. Coherence is what lets re-planning land in production without trampling the work that's already underway.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section id="cta">
+    <div class="container">
+      <div class="cta-strip">
+        <div>
+          <h3>Building parallel coding sub-agents that share a task spec?</h3>
+          <p>15-minute call. We'll look at your planner-executor graph and tell you whether agent-coherence will hold up under live re-planning.</p>
+        </div>
+        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_bottom&utm_campaign=code" rel="noopener" data-cta="book-a-call-bottom-code">Book a call →</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site">
+    <div class="container">
+      <span>© 2026 Vladyslav Parakhin · Apache-2.0 · Built in the open.</span>
+      <nav aria-label="Footer">
+        <a href="/">Home</a>
+        <a href="https://github.com/hipvlady/agent-coherence" rel="noopener">GitHub</a>
+        <a href="https://pypi.org/project/agent-coherence/" rel="noopener">PyPI</a>
+        <a href="https://arxiv.org/abs/2603.15183" rel="noopener">arXiv</a>
+        <a href="mailto:contact@agent-coherence.dev">contact@agent-coherence.dev</a>
+      </nav>
+    </div>
+  </footer>
+
+</body>
+</html>

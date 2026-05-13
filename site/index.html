@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>agent-coherence — Detect stale reads in multi-agent LLM systems</title>
 
-  <meta name="description" content="When agents share state, one is reading stale. agent-coherence makes it visible and serves the fresh version on the next read. LangGraph, CrewAI, AutoGen.">
+  <meta name="description" content="When agents share state, one is reading stale. agent-coherence makes it visible and serves the current version on the next read. LangGraph, CrewAI, AutoGen.">
   <meta name="keywords" content="stale-read detection, multi-agent observability, agent run recorder, LangGraph debugging, cache coherence, MESI, CCSStore, CrewAI, AutoGen, agent state consistency, multi-agent framework">
   <meta name="author" content="Vladyslav Parakhin">
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <link rel="canonical" href="https://agent-coherence.dev/">
 
   <meta property="og:title" content="agent-coherence — Detect stale reads in multi-agent LLM systems">
-  <meta property="og:description" content="When agents share state, one is reading stale. agent-coherence makes it visible and serves the fresh version on the next read. LangGraph, CrewAI, AutoGen.">
+  <meta property="og:description" content="When agents share state, one is reading stale. agent-coherence makes it visible and serves the current version on the next read. LangGraph, CrewAI, AutoGen.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://agent-coherence.dev/">
   <meta property="og:image" content="https://agent-coherence.dev/og-image.png">
@@ -26,7 +26,7 @@
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="agent-coherence — Detect stale reads in multi-agent LLM systems">
-  <meta name="twitter:description" content="When agents share state, one is reading stale. agent-coherence makes it visible and serves the fresh version on the next read.">
+  <meta name="twitter:description" content="When agents share state, one is reading stale. agent-coherence makes it visible and serves the current version on the next read.">
   <meta name="twitter:image" content="https://agent-coherence.dev/og-image.png">
   <meta name="twitter:image:alt" content="agent-coherence: when agents share state, one of them is reading a stale copy">
 
@@ -58,7 +58,7 @@
         "@id": "https://agent-coherence.dev/#website",
         "url": "https://agent-coherence.dev/",
         "name": "agent-coherence",
-        "description": "Detect stale reads in multi-agent LLM systems. Serve the fresh version on the next read instead of rebroadcasting.",
+        "description": "Detect stale reads in multi-agent LLM systems. Serve the current version on the next read instead of rebroadcasting.",
         "inLanguage": "en-US",
         "datePublished": "2026-05-11T00:00:00+00:00",
         "dateModified": "2026-05-12T00:00:00+00:00",
@@ -80,7 +80,7 @@
         "@id": "https://agent-coherence.dev/#software",
         "name": "agent-coherence",
         "alternateName": "ccs",
-        "description": "Detects stale reads in multi-agent LLM systems and serves the fresh version on the next read instead of rebroadcasting. MESI-style cache coherence across LangGraph, CrewAI, AutoGen, and custom orchestrators. Vendor-neutral across Anthropic, OpenAI, Google, Mistral, and open-source models.",
+        "description": "Detects stale reads in multi-agent LLM systems and serves the current version on the next read instead of rebroadcasting. MESI-style cache coherence across LangGraph, CrewAI, AutoGen, and custom orchestrators. Vendor-neutral across Anthropic, OpenAI, Google, Mistral, and open-source models.",
         "url": "https://agent-coherence.dev",
         "codeRepository": "https://github.com/hipvlady/agent-coherence",
         "programmingLanguage": ["Python"],
@@ -122,7 +122,7 @@
             "name": "What is a stale read — and how does it cause shared memory pollution?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "When one agent reads an artifact (a plan, a document, a result) that another agent has already updated, the reader gets a stale copy. If the reader then writes back, it overwrites the fresh version with logic that was based on stale state. MLflow's multi-agent observability team calls this shared memory pollution: one agent's hallucination becomes a 'fact' subsequent agents reason from, producing cascading errors that compound across reasoning steps. Trace-only tools can see the calls but not the staleness; agent-coherence detects the exact moment of divergence."
+              "text": "When one agent reads an artifact (a plan, a document, a result) that another agent has already updated, the reader gets a stale copy. If the reader then writes back, it overwrites the current version with logic that was based on stale state. MLflow's multi-agent observability team calls this shared memory pollution: one agent's hallucination becomes a 'fact' subsequent agents reason from, producing cascading errors that compound across reasoning steps. Trace-only tools can see the calls but not the staleness; agent-coherence detects the exact moment of divergence."
             }
           },
           {
@@ -530,6 +530,28 @@
     .col-card .col-meta strong { color: var(--text); font-weight: 600; }
     @media (max-width: 720px) { .cols-2 { grid-template-columns: 1fr; } }
 
+    /* Category pull-quote (locked two-liner) */
+    .category-summary {
+      margin: 28px auto 0;
+      max-width: 720px;
+      padding: 20px 24px;
+      border-left: 3px solid var(--accent);
+      background:
+        linear-gradient(90deg, rgba(94, 234, 212, 0.05), transparent 70%),
+        var(--surface);
+      border-radius: 4px;
+    }
+    .category-summary p {
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .category-summary p + p { margin-top: 6px; color: var(--muted); }
+    .category-summary em { color: var(--accent); font-style: normal; font-weight: 600; }
+    .category-summary a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent-dim); }
+    .category-summary a:hover { border-bottom-style: solid; }
+
     /* Agentic stack diagram */
     .stack {
       display: flex;
@@ -789,7 +811,7 @@
       <p class="eyebrow">State consistency · Write-side coherence for collaborating agents</p>
       <span class="badge">v<span class="ver">0.7</span> · Apache-2.0 · PyPI</span>
       <h1>When agents share state, one of them is reading a stale copy.</h1>
-      <p class="lead">That stale read is how <strong>shared memory pollution</strong> starts — one agent's hallucination becomes a "fact" the next one reasons from, and a <strong>cascading error</strong> propagates downstream. agent-coherence makes the moment visible and serves the fresh version on the next read instead of rebroadcasting the full artifact every turn. Same library, same protocol, across <strong>LangGraph, CrewAI, AutoGen</strong>, and any custom orchestrator. Same behavior regardless of model provider (<strong>Anthropic, OpenAI, Google, Mistral, open-source</strong>).</p>
+      <p class="lead">That stale read is how <strong>shared memory pollution</strong> starts — one agent's hallucination becomes a "fact" the next one reasons from, and a <strong>cascading error</strong> propagates downstream. agent-coherence makes the moment visible and serves the current version on the next read instead of rebroadcasting the full artifact every turn. Same library, same protocol, across <strong>LangGraph, CrewAI, AutoGen</strong>, and any custom orchestrator. Same behavior regardless of model provider (<strong>Anthropic, OpenAI, Google, Mistral, open-source</strong>).</p>
 
       <blockquote class="stat-callout primary-callout">
         <p style="margin:0 0 8px;">"This asynchronicity adds challenges in result coordination, <strong>state consistency</strong>, and error propagation across the subagents."</p>
@@ -847,7 +869,11 @@
         </div>
       </div>
 
-      <p style="margin-top:24px; color: var(--muted); font-size: 0.95rem;">Both layers are needed in a real production system. agent-coherence focuses on the write side. The freshness side is solved by a growing ecosystem of incremental indexing tools — use them together.</p>
+      <aside class="category-summary" aria-label="Category summary">
+        <p><em>Coherence for the artifacts your agents write</em> — not just the indexes they read.</p>
+        <p><a href="https://cocoindex.io/" rel="noopener">CocoIndex</a> keeps your indexes fresh; <em>agent-coherence keeps your agents in sync.</em></p>
+      </aside>
+      <p style="margin-top:18px; color: var(--muted); font-size: 0.95rem;">Both layers are needed in a real production system. agent-coherence focuses on the write side. The read side is solved by a growing ecosystem of incremental indexing tools — use them together.</p>
     </div>
   </section>
 
@@ -884,7 +910,7 @@
         <div class="col-card">
           <div class="icon">1</div>
           <h3>Local cache per agent</h3>
-          <p>Each shared artifact is cached locally per agent. Reads serve from the local cache when fresh — no re-broadcast.</p>
+          <p>Each shared artifact is cached locally per agent. Reads serve from the local cache when valid — no re-broadcast.</p>
         </div>
         <div class="col-card">
           <div class="icon">2</div>
@@ -898,7 +924,7 @@
         </div>
       </div>
 
-      <p style="margin-top:24px;">Five synchronization strategies ship out of the box: <code>lazy</code> (default), <code>eager</code>, <code>lease</code> (TTL-based), <code>access_count</code>, and <code>broadcast</code> — pick the one matching your workload's read/write ratio and freshness needs.</p>
+      <p style="margin-top:24px;">Five synchronization strategies ship out of the box: <code>lazy</code> (default), <code>eager</code>, <code>lease</code> (TTL-based), <code>access_count</code>, and <code>broadcast</code> — pick the one matching your workload's read/write ratio and staleness tolerance.</p>
     </div>
   </section>
 
@@ -995,7 +1021,7 @@ graph = builder.compile(store=store)</pre>
 
         <details class="faq-item">
           <summary>What is a stale read — and how does it cause shared memory pollution?</summary>
-          <p>When one agent reads an artifact — a plan, a document, a result — that another agent has already updated, the reader gets a stale copy. If the reader then writes back, it overwrites the fresh version with logic that was based on stale state. MLflow's multi-agent observability team calls this <strong>shared memory pollution</strong>: one agent's hallucination becomes a "fact" subsequent agents reason from, producing <strong>cascading errors</strong> that compound across reasoning steps. Trace-only tools can see the calls but not the staleness; agent-coherence detects the exact moment of divergence.</p>
+          <p>When one agent reads an artifact — a plan, a document, a result — that another agent has already updated, the reader gets a stale copy. If the reader then writes back, it overwrites the current version with logic that was based on stale state. MLflow's multi-agent observability team calls this <strong>shared memory pollution</strong>: one agent's hallucination becomes a "fact" subsequent agents reason from, producing <strong>cascading errors</strong> that compound across reasoning steps. Trace-only tools can see the calls but not the staleness; agent-coherence detects the exact moment of divergence.</p>
         </details>
 
         <details class="faq-item">
