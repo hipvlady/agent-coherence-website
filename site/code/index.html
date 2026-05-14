@@ -284,6 +284,55 @@
     .step.bad h3 { color: #fb7185; }
     .step.good h3 { color: var(--accent); }
 
+    /* Fleet numbers — real-LangGraph savings strip */
+    .fleet-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 24px 0 16px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .fleet-stat { text-align: center; }
+    .fleet-stat .num {
+      font-size: clamp(2rem, 4.4vw, 2.6rem);
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    }
+    .fleet-stat .label {
+      margin-top: 8px;
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    @media (max-width: 640px) {
+      .fleet-stats { grid-template-columns: 1fr; gap: 18px; padding: 22px; }
+    }
+    .fleet-repro {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+    .fleet-repro code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    .fleet-repro a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px dotted var(--accent-dim);
+    }
+    .fleet-repro a:hover { border-bottom-style: solid; }
+
     /* Why-framing cards (three-tier context block between hero and demo) */
     .why-list {
       display: grid;
@@ -580,10 +629,10 @@
 
   <section class="hero">
     <div class="container">
-      <p class="eyebrow">Coding agents · write-side coherence</p>
+      <p class="eyebrow">Multi-agent code pipelines · coherent shared state</p>
       <span class="badge">v<span class="ver">0.7.1</span> · Apache-2.0 · PyPI</span>
-      <h1>Coding sub-agents collaborating on a refactor — without trampling each other's edits.</h1>
-      <p class="lead">Cursor's planner-executor sub-agents, Claude Code's sub-task workers, Factory's parallel runs, Opencode's planning loops — they all share state through a <strong>task spec</strong>. When one sub-agent writes v2 of that spec mid-flight, the others keep operating on v1. agent-coherence detects the moment of divergence and serves the current version on the next read — before any stale commit lands in your repo.</p>
+      <h1>What multi-agent code pipelines look like with coherent shared state.</h1>
+      <p class="lead">Subagent fleets reviewing the same codebase. Planner-executor pairs editing a shared task spec. Refactor graphs fanning out across worktrees. When two of them write to that shared artifact, agent-coherence detects the moment of divergence and serves the current version on the next read — before any stale commit lands.</p>
 
       <div class="ctas">
         <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=code" rel="noopener">Book a 15-min call →</a>
@@ -603,6 +652,30 @@
     </div>
   </section>
 
+  <section id="fleet-numbers">
+    <div class="container">
+      <h2>Subagent fleets, by the numbers.</h2>
+      <p>A 4-agent code-review pipeline ships in the repo as a working example. Four reviewer subagents — style, security, architecture, synthesizer — read the same eight files in two passes each through <code>CCSStore</code>. Real LangGraph; deterministic fixture, no LLM API calls.</p>
+
+      <div class="fleet-stats">
+        <div class="fleet-stat">
+          <div class="num">37.6%</div>
+          <div class="label">token reduction per run</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="num">16,820</div>
+          <div class="label">tokens saved · 44,702 → 27,882</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="num">35.3%</div>
+          <div class="label">cache hit rate over 51 read ops</div>
+        </div>
+      </div>
+
+      <p class="fleet-repro">Reproduce locally: <code>python -m examples.shared_codebase.main</code> · Source: <a href="https://github.com/hipvlady/agent-coherence/tree/main/examples/shared_codebase?utm_source=agent-coherence.dev&utm_medium=fleet_numbers&utm_campaign=code" rel="noopener" data-cta-target="github-shared-codebase" data-cta-location="fleet-numbers">examples/shared_codebase</a>. This is the as-shipped real-LangGraph number — not the simulation benchmarks elsewhere in the repo.</p>
+    </div>
+  </section>
+
   <section id="why">
     <div class="container">
       <h2>Why this exists.</h2>
@@ -619,8 +692,8 @@
         <article class="why-card">
           <p class="why-num">2</p>
           <div>
-            <h3>Coding agents are increasingly multi-agent, and they share mutable state.</h3>
-            <p>Cursor's planner runs while the executor types. Claude Code spawns parallel sub-tasks. Factory fans out across worktrees. Opencode coordinates planning loops. And as of <strong>2026</strong>, Anthropic's <strong>Agent View</strong> productized 10+ parallel Claude Code sessions in a single workspace — Research Preview, no documented state-isolation model. The work is concurrent; the assumption that "what I read is what's current" is implicit, untested, and silently false. agent-coherence makes it explicit and provable.</p>
+            <h3>Coding pipelines are increasingly multi-agent, and they share mutable state.</h3>
+            <p>Claude Code spawns Task subagent fleets. LangGraph code-review graphs run three or four reviewers over the same artifact. Refactor pipelines fan out planners and executors that edit a shared task spec. And as of <strong>2026</strong>, Anthropic's <strong>Agent View</strong> productized 10+ parallel Claude Code sessions in a single workspace — Research Preview, no documented state-isolation model. The work is concurrent; the assumption that "what I read is what's current" is implicit, untested, and silently false. agent-coherence makes it explicit and provable.</p>
           </div>
         </article>
 
@@ -767,7 +840,7 @@ ccs-diagnose --graph my_graph.py:build_graph</pre>
     <div class="container">
       <h2>Why this matters now.</h2>
       <aside class="trajectory">
-        <p>Today's Cursor and Claude Code sub-agents run on <strong>frozen specs</strong>: the planner finishes, freezes a plan, then the executor runs.</p>
+        <p>Today's coding sub-agents run on <strong>frozen specs</strong>: the planner finishes, freezes a plan, then the executor runs.</p>
         <p>Tomorrow's don't. Deep Agents already does live re-planning. As soon as planners and executors run in parallel, frozen specs become stale specs, and stale specs become silent build failures. Coherence is what lets re-planning land in production without trampling the work that's already underway.</p>
       </aside>
     </div>
