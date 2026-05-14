@@ -589,6 +589,34 @@
       letter-spacing: 0.06em;
       vertical-align: 1px;
     }
+    /* "Memory and coherence are different layers" — layer-composition argument */
+    .memory-vs-coherence {
+      margin: 32px 0 18px;
+      padding: 24px 26px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      background:
+        linear-gradient(90deg, rgba(94, 234, 212, 0.04), transparent 70%),
+        var(--surface);
+    }
+    .memory-vs-coherence h3 {
+      margin: 0 0 12px;
+      font-size: 1.12rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+    .memory-vs-coherence p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.96rem;
+      line-height: 1.6;
+    }
+    .memory-vs-coherence p + p { margin-top: 10px; }
+    .memory-vs-coherence strong { color: var(--text); }
+    .memory-vs-coherence em { color: var(--text); font-style: italic; }
+
     .stack-caption {
       margin-top: 18px;
       color: var(--muted);
@@ -1061,6 +1089,12 @@ graph = builder.compile(store=store)</pre>
           <p class="stack-meta">Knowledge graphs, RAG corpora, vector stores, read-side freshness pipelines, ticketing systems, code repos.</p>
         </div>
       </div>
+
+      <aside class="memory-vs-coherence" aria-label="Memory and coherence">
+        <h3>Memory and coherence are different layers.</h3>
+        <p>Every production agent runtime ships <strong>durable execution, memory, guardrails, multi-tenancy, human oversight, observability, code execution, integrations, scheduling</strong>. State coherence between concurrent agents writing to the same shared artifact is not in that list — because memory is keyed by thread, and multi-tenancy is keyed by user, and neither of those answers the question <em>"what does agent B see when agent A just committed v3?"</em></p>
+        <p>agent-coherence sits beside the runtime, not above or below. It composes with checkpoint-and-store memory the way locking composes with logging — different concerns, both required.</p>
+      </aside>
 
       <p class="stack-caption">
         Layer naming follows <a href="https://medium.com/quantumblack/creating-a-future-proof-enterprise-agentic-platform-architecture-c21fc48406a5" rel="noopener">"Creating a future-proof enterprise agentic platform architecture"</a> (QuantumBlack/McKinsey). agent-coherence is composable by design: it slots alongside your existing evaluations, observability, and memory layers — same library across LangGraph, CrewAI, AutoGen, and custom runtimes, vendor-neutral across Anthropic, OpenAI, Google, Mistral, and open-source models. Multi-vendor workflows, minimum lock-in.
