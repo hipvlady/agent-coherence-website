@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#131418"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Decorative coherence diagram (top right): two sessions, one artifact -->
+  <g opacity="0.45">
+    <circle cx="980" cy="120" r="34" fill="none" stroke="#5eead4" stroke-width="3"/>
+    <circle cx="1100" cy="120" r="34" fill="none" stroke="#5eead4" stroke-width="3"/>
+    <circle cx="1040" cy="220" r="34" fill="#5eead4" fill-opacity="0.15" stroke="#5eead4" stroke-width="3"/>
+    <path d="M1014 120 H1066" stroke="#5eead4" stroke-width="3" stroke-linecap="round"/>
+    <path d="M995 145 L1025 195" stroke="#5eead4" stroke-width="3" stroke-linecap="round"/>
+    <path d="M1085 145 L1055 195" stroke="#5eead4" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- Brand -->
+  <text x="80" y="115" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="28" font-weight="600" fill="#9095a0" letter-spacing="-0.5">
+    agent-coherence<tspan fill="#5eead4">.</tspan>dev<tspan fill="#5eead4" font-size="22"> · /plugin</tspan>
+  </text>
+
+  <!-- Headline -->
+  <text x="80" y="225" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="52" font-weight="700" fill="#e8e8ea" letter-spacing="-1.6">
+    <tspan x="80" dy="0">Coherence for the <tspan fill="#5eead4">prose</tspan></tspan>
+    <tspan x="80" dy="66">subset of project rules</tspan>
+    <tspan x="80" dy="66">that can't be policy.</tspan>
+  </text>
+
+  <!-- Subhead -->
+  <text x="80" y="495" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="400" fill="#9095a0">
+    <tspan x="80" dy="0">Claude Code plugin · catches stale reads of</tspan>
+    <tspan x="80" dy="34" font-family="ui-monospace, 'SF Mono', Menlo, monospace" fill="#5eead4">CLAUDE.md  plan.md  spec.md  runbook.md</tspan>
+  </text>
+
+  <!-- Footer strip -->
+  <line x1="80" y1="570" x2="1120" y2="570" stroke="#262830" stroke-width="1"/>
+  <text x="80" y="600" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="20" font-weight="500" fill="#9095a0">
+    Apache-2.0 · v0.1 private alpha
+  </text>
+  <text x="1120" y="600" text-anchor="end" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="20" font-weight="500" fill="#5eead4">
+    claude plugin marketplace add hipvlady/agent-coherence-plugin
+  </text>
+</svg>

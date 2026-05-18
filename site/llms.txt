@@ -1,15 +1,40 @@
 # agent-coherence
 
-> agent-coherence is an open-source Python library that detects stale reads in multi-agent LLM systems and serves the current version on the next read instead of rebroadcasting the full artifact every turn. It implements a MESI-style cache-coherence protocol adapted from CPU cache design, with drop-in adapters for LangGraph, CrewAI, AutoGen, and any custom orchestrator. The protocol operates on artifacts, not model responses, so it is model-provider-neutral (works the same with Anthropic, OpenAI, Google, Mistral, and open-source models).
+> agent-coherence is an open-source coherence protocol for shared artifacts in multi-agent LLM systems. It detects stale reads — moments when one agent's view of a shared artifact is older than another agent's just-committed version — and serves the current version on the next read instead of rebroadcasting the full artifact every turn. Implements a MESI-style cache-coherence protocol adapted from CPU cache design.
+>
+> Ships as **two products** with one underlying engine:
+>
+> 1. **A Python library** (`agent-coherence`) with drop-in adapters for LangGraph, CrewAI, AutoGen, and custom orchestrators. Vendor-neutral across model providers.
+> 2. **A Claude Code plugin** (`agent-coherence-plugin`) that wires the coherence protocol into Claude Code's hook system. Detects when one session's view of `CLAUDE.md`, `plan.md`, `spec.md`, `runbook.md`, or other prose-shaped project rules drifts from another session's — or from what survives compaction.
 
-## What it does
+## Positioning
+
+The plugin's positioning one-liner (v0.1.1 marketplace listing, v0.1.1+ README, agent-coherence.dev/plugin): **"Coherence for the prose subset of project rules that can't be expressed as policy."**
+
+This locates the plugin against the rules-as-prose vs rules-as-config structural framing:
+
+| Class | Substrate | Right fix |
+|---|---|---|
+| Tool-class restrictions (e.g. `rg` over `grep`; no inline `python3 -c`) | `settings.json` `permissions.deny` — durable config | Migrate out of prose into config; survives subagent boundaries and compaction |
+| Descriptive / architectural (`CLAUDE.md`, `plan.md`, `spec.md`, `runbook.md`, `DECISIONS.md`) | Prose | Can't be config-ified by definition. Versioning + coherence tracking. **This is where the plugin sits.** |
+
+The two fixes don't compete. Moving config-able rules to `permissions.deny` is hygiene that reduces the surface the plugin has to track. The prose residue — design constraints, architectural decisions, active-work artifacts — is what's left for coherence tracking.
+
+## The library — what it does
 
 - **Detects stale reads.** When agent B reads an artifact after agent A has modified it, agent-coherence flags the stale read instead of silently serving outdated data. Most frameworks have no such mechanism; LangGraph's BaseStore documentation explicitly states it "does not natively support optimistic locking, vector versioning, or invalidation protocols."
 - **Serves the current version on the next read.** Rather than broadcasting the full artifact to every agent on every turn (the default in CrewAI, AutoGen, and most LangGraph patterns), agent-coherence sends ~12-token invalidation signals when state changes and only re-fetches on the next read.
-- **Enforces single-writer exclusivity per artifact.** Concurrent writes are prevented at the protocol level — they are not "resolved" by an append-only reducer that produces duplicates or unexpected list nesting.
-- **Records what each agent saw.** Per-agent content-audit log with SHA-256 hashes per read, plus a sequence-numbered state-transition log. These streams are the data substrate for run replay and stale-read forensics.
+- **Enforces single-writer exclusivity per artifact.** Concurrent writes are prevented at the protocol level — not "resolved" by an append-only reducer that produces duplicates or unexpected list nesting.
+- **Records what each agent saw.** Per-agent content-audit log with SHA-256 hashes per read, plus a sequence-numbered state-transition log. The data substrate for run replay and stale-read forensics.
 
-## Measured impact
+## The plugin — what it does
+
+- **Wires `PreToolUse:Read` and `PreToolUse:Edit|Write` hooks** into Claude Code's hook system. On every `Read` of a tracked file, the hook checks coordinator state and injects an `additionalContext` warning if the artifact has been updated by another session.
+- **Per-workspace SQLite-backed coordinator.** Survives compaction. Survives crash. Re-hydrates on next session start.
+- **`permissions.deny`-aware.** Doesn't double-warn on tools the config already blocks.
+- **One-line install.** `claude plugin marketplace add hipvlady/agent-coherence-plugin` — measured at 27 seconds end-to-end on the alpha install with the library pre-installed.
+
+## Measured impact (library)
 
 Reproducible benchmarks on real LangGraph graphs (CI uses `GenericFakeChatModel`; no live API calls):
 
@@ -19,17 +44,34 @@ Reproducible benchmarks on real LangGraph graphs (CI uses `GenericFakeChatModel`
 | Code review (moderate) | 8:3 | 60% | 47% |
 | High-churn (write-heavy) | 8:4 | 50% | 29% |
 
-Reproduce with `make benchmark` after `pip install -e ".[langgraph,benchmark]"`.
+Plus a real 4-agent code-review pipeline that ships in the repo as a working example (`examples/shared_codebase/`):
+
+- 37.6% token reduction per run (real LangGraph, not simulation)
+- 16,820 tokens saved (44,702 → 27,882 per run)
+- 35.3% cache hit rate over 51 read ops
+
+Reproduce with `make benchmark` or `python -m examples.shared_codebase.main` after `pip install -e ".[langgraph,benchmark]"`.
 
 ## Install
 
+**Library** (LangGraph / CrewAI / AutoGen / custom):
+
 ```
 pip install "agent-coherence[langgraph]"
+pip install "agent-coherence[crewai]"
+pip install "agent-coherence[autogen]"
 ```
 
-For CrewAI: `pip install "agent-coherence[crewai]"`. For AutoGen: `pip install "agent-coherence[autogen]"`.
+**Plugin** (Claude Code):
 
-## LangGraph drop-in
+```
+pip install agent-coherence
+claude plugin marketplace add hipvlady/agent-coherence-plugin
+claude plugin install agent-coherence
+agent-coherence-track docs/plans/feature-x.md
+```
+
+## LangGraph drop-in (library)
 
 ```python
 from ccs.adapters import CCSStore        # instead of langgraph.store.memory.InMemoryStore
@@ -55,26 +97,46 @@ Five strategies ship out of the box. Choose by workload shape:
 The protocol operates on artifacts and version metadata, not on model responses or tokens. Behavior is identical with:
 
 - **Model providers:** Anthropic (Claude), OpenAI (GPT), Google (Gemini), Mistral, AWS Bedrock, Azure OpenAI, open-source models via Ollama / vLLM / llama.cpp.
-- **Orchestration frameworks:** LangGraph, CrewAI, AutoGen, and custom orchestrators via `CoherenceAdapterCore`.
+- **Orchestration frameworks:** LangGraph, CrewAI, AutoGen, and custom orchestrators via `CoherenceAdapterCore`. Plus Claude Code via the plugin.
+
+## The coordination invariant
+
+Six issues on the public Claude Code tracker over three months across two surfaces share one underlying shape: **the runtime emits coordination signals that don't reflect actual state.** A capability or piece of state appears honored; the runtime can't honor it; the LLM completes the call as text rather than the system surfacing a hard failure.
+
+Three places the same shape shows up:
+
+1. **Rules-as-prose layer.** `CLAUDE.md` isn't in context after compaction; subagents don't inherit it on spawn.
+2. **ACK layer.** A notification fires before the underlying process terminates; a claim doesn't wait for readiness.
+3. **Artifact-state layer.** One session's view of a shared file doesn't reflect another session's update.
+
+agent-coherence is the artifact-layer instance of this cross-cutting invariant: *signals about shared state must reflect actual state*. The plugin doesn't compete with the runtime fixes Anthropic is shipping for the other two layers — it sits at the layer those fixes don't reach: **concurrent multi-session state coherence across worktrees and across mid-session artifact edits.**
+
+## TAM beyond CLAUDE.md
+
+The same fragility applies to skill instructions and slash-command prompts loaded at session start. Anything important loaded at the session boundary — which is to say, anything loaded at a boundary that compaction crosses — has the same shape. `CLAUDE.md` is the visible case; every plugin that loads instructions at session start (slash commands, skill prompts, project rules) inherits it.
 
 ## Production safety
 
-- **License:** Apache-2.0, public on GitHub.
-- **Tests:** 165 unit + integration tests.
+- **License:** Apache-2.0, public on GitHub. Both the library and the plugin.
+- **Tests (library):** 165 unit + integration tests.
 - **Formal verification:** Protocol safety properties (single-writer, monotonic versioning, no torn reads) model-checked with TLA+/TLC in CI.
 - **Supply chain:** PyPI Trusted Publishers (OIDC), PEP 740 attestations, CycloneDX SBOM published with every release.
-- **Crash recovery:** Optional sweep reclaims stale grants when agents OOM-kill or livelock (heartbeat-based, opt-in via `CrashRecoveryConfig`).
+- **Crash recovery:** Optional sweep reclaims stale grants when agents OOM-kill or livelock (heartbeat-based, opt-in via `CrashRecoveryConfig`). The plugin's SQLite coordinator rehydrates after idle-shutdown.
 - **Diagnose CLI:** `ccs-diagnose` is a zero-network static analyzer that detects stale-read risk in existing LangGraph graphs before adoption.
 
 ## Key links
 
-- Source: https://github.com/hipvlady/agent-coherence
-- PyPI: https://pypi.org/project/agent-coherence/
-- Paper: https://arxiv.org/abs/2603.15183
-- Site: https://agent-coherence.dev
-- Discussions: https://github.com/hipvlady/agent-coherence/discussions
-- Contact: contact@agent-coherence.dev
-- 15-min call: https://cal.com/agent-coherence
+- **Library source:** https://github.com/hipvlady/agent-coherence
+- **Library PyPI:** https://pypi.org/project/agent-coherence/
+- **Plugin source:** https://github.com/hipvlady/agent-coherence-plugin
+- **Paper:** https://arxiv.org/abs/2603.15183
+- **Home:** https://agent-coherence.dev
+- **Library landing page:** https://agent-coherence.dev/code/
+- **Plugin landing page:** https://agent-coherence.dev/plugin/
+- **Discussions:** https://github.com/hipvlady/agent-coherence/discussions
+- **Contact:** contact@agent-coherence.dev
+- **15-min call:** https://cal.com/agent-coherence
+- **LinkedIn:** https://www.linkedin.com/company/agent-coherence/
 
 ## Background reading
 
