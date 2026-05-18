@@ -20,7 +20,7 @@ set -e
 
 # ─── Scene 1: workspace + file content ──────────────────────────────────────
 clear
-printf '\033[1;36m$\033[0m cat docs/plans/feature-x.md\n'
+printf '\033[1;36m❯\033[0m cat docs/plans/feature-x.md\n'
 sleep 0.6
 cat <<'EOF'
 # Feature X plan (v4 — UPDATED 2026-05)
@@ -35,7 +35,7 @@ sleep 2.5
 
 # ─── Scene 2: invoke claude with the plugin's hook events streaming ─────────
 echo
-printf '\033[1;36m$\033[0m claude --include-hook-events --output-format stream-json \\\n'
+printf '\033[1;36m❯\033[0m claude --include-hook-events --output-format stream-json \\\n'
 printf '         --print --verbose --model haiku \\\n'
 printf '         "Read docs/plans/feature-x.md and summarize the deployment plan."\n'
 sleep 1.4
@@ -101,7 +101,7 @@ sleep 2.0
 
 # ─── Scene 4: final status check ────────────────────────────────────────────
 echo
-printf '\033[1;36m$\033[0m agent-coherence-status\n'
+printf '\033[1;36m❯\033[0m agent-coherence-status\n'
 sleep 0.6
 cat <<'EOF'
 
@@ -110,7 +110,6 @@ Tracked artifacts (1):
                                        this session viewed:    none prior
 
 Coordinator: pid 47281, listening 127.0.0.1:50311, uptime 4m12s
-Workspace:   /tmp/refactor_demo   (auto-detected from .coherence/)
 EOF
 sleep 2.5
 
