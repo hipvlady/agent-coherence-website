@@ -3,22 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>/test — stale-read demo preview</title>
+  <title>agent-coherence-plugin — coherence for the prose subset of project rules</title>
 
   <!--
-    STATUS: PREVIEW — not for public consumption.
-    noindex + nofollow; not linked from /, not in sitemap.xml.
-    Built for evaluation per the v0.1 plan's Unit 10 demo recording,
-    sourced from outreach/plugin-demo/.
+    STATUS: PUBLISH-READY DRAFT.
+    Currently noindex per v0.1 release discipline; flip robots meta + add
+    /sitemap.xml entry to ship publicly. Source narrative:
+    agent-coherence/docs/plans/2026-05-13-001-feat-claude-code-coherence-plugin-v0.1-plan.md
   -->
 
-  <meta name="description" content="Internal preview of the agent-coherence-plugin stale-read demo recording.">
+  <meta name="description" content="Coherence for the prose subset of project rules that can't be expressed as policy. A Claude Code plugin that flags stale reads of CLAUDE.md, plan.md, spec.md and other shared artifacts across sessions and compaction.">
+  <meta name="keywords" content="claude code plugin, agent-coherence, CLAUDE.md compaction, prose rules, multi-session coherence, stale read detection, hooks API, MESI, coordination layer, multi-agent runtime">
+  <meta name="author" content="Vladyslav Parakhin">
   <meta name="robots" content="noindex, nofollow">
   <meta name="googlebot" content="noindex, nofollow">
 
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/favicon.svg">
   <meta name="theme-color" content="#0a0a0a">
   <meta name="color-scheme" content="dark light">
+
+  <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+  <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cal.com">
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJ3C5FZX64"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-NJ3C5FZX64', {
+      anonymize_ip: true,
+      linker: { domains: ['cal.com', 'agent-coherence.dev'] }
+    });
+  </script>
 
   <style>
     :root {
@@ -32,6 +51,7 @@
       --accent-dim: #14b8a6;
       --warn: #fb7185;
       --code-bg: #11131a;
+      --max-width: 920px;
     }
     @media (prefers-color-scheme: light) {
       :root {
@@ -46,7 +66,7 @@
       }
     }
     * { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -54,189 +74,476 @@
       color: var(--text);
       line-height: 1.55;
     }
-    .container { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+    .container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    h1 { font-size: clamp(1.5rem, 4vw, 2.1rem); letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 14px; }
-    h2 { font-size: 1.2rem; letter-spacing: -0.01em; margin: 36px 0 12px; }
-    p.lead { font-size: 1.06rem; color: var(--muted); }
+    h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 18px; }
+    h2 { font-size: 1.5rem; letter-spacing: -0.01em; margin: 48px 0 14px; }
+    h3 { margin: 0 0 8px; font-size: 1.08rem; font-weight: 600; }
+    p.lead { font-size: 1.18rem; color: var(--muted); line-height: 1.55; }
 
-    .preview-banner {
+    /* Header */
+    header.site {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 0;
+      background: rgba(10, 10, 10, 0.78);
+      backdrop-filter: saturate(180%) blur(14px);
+      -webkit-backdrop-filter: saturate(180%) blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    @media (prefers-color-scheme: light) { header.site { background: rgba(255, 255, 255, 0.78); } }
+    header.site .container { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text); font-size: 1.02rem; letter-spacing: -0.01em; flex-shrink: 0; }
+    .brand:hover { text-decoration: none; color: var(--text); }
+    .brand-logo { width: 22px; height: 22px; color: var(--accent); flex-shrink: 0; }
+    .brand .dot { color: var(--accent); }
+    nav.site { display: flex; align-items: center; gap: 22px; flex: 1; justify-content: center; }
+    nav.site a { color: var(--muted); font-size: 0.92rem; transition: color 0.15s ease; }
+    nav.site a:hover { color: var(--text); text-decoration: none; }
+    nav.site a.current { color: var(--text); }
+
+    .btn {
+      display: inline-block; padding: 12px 18px; border-radius: 8px; font-weight: 600;
+      font-size: 0.95rem; border: 1px solid var(--border); color: var(--text); background: var(--surface);
+      transition: all 0.15s ease;
+    }
+    .btn:hover { background: var(--surface-2); text-decoration: none; }
+    .btn.primary { background: var(--accent); color: #06231f; border-color: var(--accent); }
+    .btn.primary:hover { background: var(--accent-dim); }
+    .header-cta { padding: 8px 16px; font-size: 0.9rem; flex-shrink: 0; }
+    @media (max-width: 760px) {
+      nav.site { display: none; }
+      header.site { padding: 12px 0; }
+      .header-cta { padding: 7px 14px; font-size: 0.85rem; }
+    }
+
+    /* Hero */
+    section.hero { padding: 56px 0 24px; }
+    .eyebrow { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
+    .badge { display: inline-block; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-size: 0.75rem; letter-spacing: 0.04em; margin-bottom: 18px; }
+    .badge .ver { color: var(--accent); }
+    .ctas { display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0 8px; }
+
+    .draft-banner {
       background: rgba(251, 113, 133, 0.08);
       border: 1px solid rgba(251, 113, 133, 0.35);
       color: var(--warn);
-      padding: 10px 16px;
+      padding: 8px 14px;
       border-radius: 6px;
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       letter-spacing: 0.04em;
       text-align: center;
-      margin: 18px 0 0;
+      margin: 14px 0 0;
     }
 
-    section { padding: 24px 0; }
+    /* Sections */
+    section { padding: 28px 0; }
     .container > p { color: var(--muted); }
     .container > p strong { color: var(--text); }
 
-    .demo-gif {
-      display: block;
-      width: 100%;
-      height: auto;
-      max-width: 100%;
-      margin: 12px 0 24px;
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--warn);
-      border-radius: 10px;
-      background: #0a0a0a;
+    /* Install block */
+    .install {
+      display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: var(--code-bg);
+      border: 1px solid var(--border); border-radius: 8px; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 0.92rem; margin: 22px 0 8px; flex-wrap: wrap;
     }
-    .demo-montage {
-      display: block;
-      width: 100%;
-      height: auto;
-      max-width: 100%;
-      margin: 12px 0 8px;
+    .install code { color: var(--text); flex: 1; }
+    .install code .prompt { color: var(--muted); margin-right: 8px; }
+    .install code .pkg { color: var(--accent); }
+    .copy-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 0.85rem; cursor: pointer; font-family: inherit; }
+    .copy-btn:hover { color: var(--text); border-color: var(--accent-dim); }
+
+    /* Scene cards — sequential narrative beats */
+    .scene-card {
+      margin: 24px 0;
       border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      border-radius: 10px;
+      border-radius: 12px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .scene-card.scene-pivot { border-left: 4px solid var(--warn); }
+    .scene-card.scene-resolve { border-left: 4px solid var(--accent); }
+    .scene-card.scene-context { border-left: 4px solid var(--accent-dim); }
+    .scene-card header {
+      padding: 20px 24px 16px;
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .scene-num {
+      margin: 0;
+      font-size: 1.9rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent);
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      letter-spacing: -0.04em;
+    }
+    .scene-card.scene-pivot .scene-num { color: var(--warn); }
+    .scene-card header h3 { margin: 0 0 6px; font-size: 1.08rem; letter-spacing: -0.01em; }
+    .scene-meta { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.55; }
+    .scene-meta code { background: var(--code-bg); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
+    .scene-shot {
+      display: block;
+      width: calc(100% - 40px);
+      max-width: 100%;
+      height: auto;
+      margin: 0 20px 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
       background: #0a0a0a;
       image-rendering: -webkit-optimize-contrast;
     }
+    .scene-footnote {
+      margin: 24px 0 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.55;
+    }
+    .scene-footnote a { color: var(--accent); border-bottom: 1px dotted var(--accent-dim); }
+    .scene-footnote a:hover { border-bottom-style: solid; }
 
-    .honesty-card {
-      margin: 24px 0;
-      padding: 22px 24px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
+    /* Two-class table — rules-as-prose vs rules-as-config */
+    .rules-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 18px 0 12px;
+      font-size: 0.92rem;
+    }
+    .rules-table th {
       background: var(--surface);
-    }
-    .honesty-card h3 { margin: 0 0 10px; font-size: 1rem; font-weight: 700; }
-    .honesty-card p { margin: 0 0 8px; color: var(--muted); font-size: 0.94rem; line-height: 1.6; }
-    .honesty-card p:last-child { margin-bottom: 0; }
-    .honesty-card strong { color: var(--text); }
-    .honesty-card code {
-      background: var(--code-bg);
+      color: var(--text);
+      text-align: left;
+      padding: 14px 16px;
       border: 1px solid var(--border);
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-size: 0.88em;
-    }
-
-    .real-vs-staged {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin: 16px 0;
-    }
-    .real-vs-staged > div {
-      padding: 16px 18px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--surface);
-    }
-    .real-vs-staged h4 {
-      margin: 0 0 8px;
-      font-size: 0.7rem;
       font-weight: 700;
-      letter-spacing: 0.14em;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
     }
-    .real-vs-staged .real h4 { color: var(--accent); }
-    .real-vs-staged .staged h4 { color: var(--warn); }
-    .real-vs-staged ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.9rem; line-height: 1.55; }
-    .real-vs-staged li { margin: 4px 0; }
-    @media (max-width: 640px) {
-      .real-vs-staged { grid-template-columns: 1fr; }
+    .rules-table th:first-child { border-top-left-radius: 8px; }
+    .rules-table th:last-child { border-top-right-radius: 8px; }
+    .rules-table td {
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-top: none;
+      color: var(--muted);
+      vertical-align: top;
+      line-height: 1.5;
+    }
+    .rules-table tr:last-child td:first-child { border-bottom-left-radius: 8px; }
+    .rules-table tr:last-child td:last-child { border-bottom-right-radius: 8px; }
+    .rules-table td strong { color: var(--text); }
+    .rules-table td code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.86em;
+    }
+    .rules-table tr.this-row td { background: linear-gradient(90deg, rgba(94, 234, 212, 0.04), transparent 70%); }
+    .rules-table tr.this-row td:first-child { border-left: 3px solid var(--accent); }
+    @media (max-width: 720px) {
+      .rules-table, .rules-table thead, .rules-table tbody, .rules-table th, .rules-table td, .rules-table tr { display: block; }
+      .rules-table thead { display: none; }
+      .rules-table td { border-top: 1px solid var(--border); }
+      .rules-table td::before { content: attr(data-label); display: block; font-weight: 700; font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
     }
 
-    footer {
+    /* Invariant block — the cross-cutting framing */
+    .invariant {
+      margin: 28px 0 12px;
+      padding: 22px 24px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      background:
+        linear-gradient(90deg, rgba(94, 234, 212, 0.04), transparent 70%),
+        var(--surface);
+    }
+    .invariant h3 { margin: 0 0 10px; font-size: 1.08rem; font-weight: 700; color: var(--text); }
+    .invariant p { margin: 0; color: var(--muted); font-size: 0.96rem; line-height: 1.6; }
+    .invariant p + p { margin-top: 10px; }
+    .invariant strong { color: var(--text); }
+    .invariant em { color: var(--text); font-style: italic; }
+
+    /* CTA strip */
+    .cta-strip {
+      margin: 48px 0 24px;
+      padding: 32px 28px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .cta-strip h3 { margin: 0; font-size: 1.2rem; }
+    .cta-strip p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; }
+
+    /* Footer */
+    footer.site {
       border-top: 1px solid var(--border);
-      padding: 24px 0;
-      margin-top: 28px;
+      padding: 36px 0 56px;
+      margin-top: 24px;
       color: var(--muted);
       font-size: 0.85rem;
     }
-    footer .container { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    footer.site .container { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    footer.site a { color: var(--muted); margin-left: 14px; }
+    footer.site a:first-child { margin-left: 0; }
+    footer.site a:hover { color: var(--accent); text-decoration: none; }
+    footer.site a.social-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 6px;
+      vertical-align: middle; transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    footer.site a.social-icon:hover { color: var(--accent); border-color: var(--accent-dim); }
   </style>
 </head>
 <body>
 
+  <header class="site">
+    <div class="container">
+      <a class="brand" href="/" aria-label="agent-coherence home">
+        <svg class="brand-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="6" cy="7" r="2.6" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="18" cy="7" r="2.6" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="12" cy="18" r="2.6" fill="currentColor" stroke="currentColor" stroke-width="1.6"/>
+          <line x1="8.6" y1="7" x2="15.4" y2="7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="7.3" y1="9.2" x2="11" y2="15.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="16.7" y1="9.2" x2="13" y2="15.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <span>agent-coherence<span class="dot">.</span></span>
+      </a>
+      <nav class="site" aria-label="Primary">
+        <a href="/#how">How</a>
+        <a href="/#frameworks">Frameworks</a>
+        <a href="/code/">Code</a>
+        <a class="current" href="/test/">Plugin</a>
+        <a href="https://github.com/hipvlady/agent-coherence-plugin?utm_source=agent-coherence.dev&utm_medium=nav&utm_campaign=plugin" rel="noopener" data-cta-target="github" data-cta-location="nav">GitHub</a>
+      </nav>
+      <a class="btn primary header-cta" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_header&utm_campaign=plugin" rel="noopener" data-cta-target="cal" data-cta-location="header">Book a call</a>
+    </div>
+  </header>
+
   <div class="container">
-    <p class="preview-banner">PREVIEW · noindex · staged cast — not for public release</p>
-
-    <section>
-      <h1>Stale-read demo · preview</h1>
-      <p class="lead">Path-B recording per the source script at <code>docs/demos/2026-05-17-stale-read-demo-script.md</code> in the plugin repo. The warning text is the verbatim output of <code>ccs.adapters.claude_code.hook_payloads.stale_read_warning()</code>; the orchestration around it is staged so the cast reproduces faithfully without depending on a configured <code>claude</code> CLI + a live Haiku API call.</p>
-    </section>
-
-    <section>
-      <h2>The recording</h2>
-      <img class="demo-gif" src="stale-read.gif" alt="Asciinema GIF showing a staged claude session: the user runs claude with the stream-JSON hook events flag and a Read request against docs/plans/feature-x.md. The plugin's PreToolUse:Read hook fires and injects a Stale read warning into the agent's additionalContext, indicating the file was updated by another session and recommending a re-read. The assistant acknowledges the warning before answering. The agent-coherence-status command then shows the artifact's tracked version. About 29 seconds of content plus a 3-second pause before the loop restarts." loading="lazy" />
-    </section>
-
-    <section>
-      <h2>Alternative — 4-panel PNG montage</h2>
-      <p>The source script names a fallback at the bottom: <em>"Take the 4 scenes as still screenshots and string them as a 4-panel PNG montage. The warning text in scene 3 is the load-bearing visual; everything else is context. A montage is acceptable for v0.1 alpha if recorded video lags marketplace submission for v0.1.1."</em></p>
-      <p>Same content, no playback dependency — viable wherever GIF embedding is awkward (a static README, a slide deck, a marketplace listing with a single-image limit, or any platform that doesn't auto-play animations on mobile).</p>
-      <img class="demo-montage" src="stale-read-montage.png" alt="Four-panel static montage of the stale-read demo: panel 1 shows the plan.md content two sessions are sharing; panel 2 shows the claude invocation with stream-JSON output flag and the initial hook events; panel 3 shows the load-bearing visual — the plugin's stale-read warning text injected into the agent's additionalContext via PreToolUse:Read; panel 4 shows the agent's acknowledgement plus the agent-coherence-status output reporting v3 by another writer." loading="lazy" />
-      <p style="margin-top: 12px; color: var(--muted); font-size: 0.86rem;">PNG · 146&nbsp;KB · 1820×1378 native, scaled to container width.</p>
-    </section>
-
-    <section>
-      <h2>What's authentic, what's staged</h2>
-      <div class="real-vs-staged">
-        <div class="real">
-          <h4>Authentic (byte-for-byte)</h4>
-          <ul>
-            <li>The ⚠ warning text — exact output of <code>stale_read_warning()</code> in <code>hook_payloads.py</code></li>
-            <li>The <code>hooks.json</code> contract (PreToolUse:Read · Edit|Write · PostToolUse · SessionStart · Stop)</li>
-            <li>The <code>agent-coherence-status</code> output shape (matches the CLI's <code>track</code>/<code>untrack</code>/<code>status</code> command grammar)</li>
-            <li>The plan content (<code>docs/plans/feature-x.md</code>) is the demo-script's seed verbatim</li>
-            <li>The session-id / writer-id / port shapes match the plugin's actual format</li>
-          </ul>
-        </div>
-        <div class="staged">
-          <h4>Staged (for clarity / no API call)</h4>
-          <ul>
-            <li>The cast emits the stream-JSON itself via <code>printf</code>; no <code>claude</code> CLI invocation</li>
-            <li>Timestamps are fixed (<code>2026-05-17T12:34:56+00:00</code>) so the GIF is reproducible</li>
-            <li>The "assistant response" text is hand-written; a real Haiku call would produce a similar shape but not the same words</li>
-            <li>The SQLite pre-seeding the source script describes is implicit — the cast renders the outcome, not the orchestration that produced it</li>
-            <li>Line-wrapped warning over multiple printf calls for readability; the actual <code>additionalContext</code> arrives as a single string</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <h2>How to evaluate</h2>
-      <div class="honesty-card">
-        <h3>Things to look at</h3>
-        <p><strong>Visual rhythm.</strong> Does the eye land on the ⚠ warning at the right moment? The 4-second absorption pause after the warning text is the load-bearing visual the source script asks for.</p>
-        <p><strong>Warning legibility.</strong> Can you read the entire warning sentence as it scrolls? If the multi-line wrap is awkward, the fixture script can re-pace.</p>
-        <p><strong>Authenticity feel.</strong> Does the cast read as a real claude session? The intent is "staged but indistinguishable from real" — if anything reads as obviously fake, flag it.</p>
-        <p><strong>File size.</strong> The current GIF is 687&nbsp;KB. Cast is 3.2&nbsp;KB. Could compress further by trimming repetitive printf newlines or reducing font size.</p>
-      </div>
-    </section>
-
-    <section>
-      <h2>Promotion path (if this evaluates well)</h2>
-      <div class="honesty-card">
-        <h3>Two destinations the source script names</h3>
-        <p>Per the script at the top, the recording targets <strong>Unit 10 marketplace listing</strong> (<code>claude plugin marketplace</code> thumbnail) and <strong>the marketing <code>/code</code> page</strong> on this site.</p>
-        <p>Suggested cuts for each:</p>
-        <p>→ <strong>Marketplace</strong>: the same 17-second cast plus 3-second pause works as-is. The asciinema cast (3.2&nbsp;KB) is the right format for any platform that accepts embed snippets; the 687&nbsp;KB GIF works for static thumbnails.</p>
-        <p>→ <strong><code>/code</code> page</strong>: add as a fourth section below the existing planner-executor refactor demo, framed as "stale-read detection without a code change — when the writer is another session." The two demos share grammar (op-log + result) so they slot in cleanly.</p>
-        <p>→ <strong>When the plugin is actually installed locally</strong>: replace this staged cast with the authentic one from the source script's Recording section. Same record/trim/render pipeline (<code>outreach/plugin-demo/record.sh</code>) re-runs against a real <code>claude</code> invocation. The fixture script can be deleted at that point.</p>
-      </div>
-    </section>
-
+    <p class="draft-banner">DRAFT · noindex · v0.1.1 marketplace narrative — flip robots meta + add sitemap entry to publish.</p>
   </div>
 
-  <footer>
+  <section class="hero">
     <div class="container">
-      <span>Preview only · noindex · staged recording</span>
-      <span>Source: <code>outreach/plugin-demo/</code></span>
+      <p class="eyebrow">Claude Code plugin · coordination layer</p>
+      <span class="badge">v<span class="ver">0.1</span> · private alpha · Apache-2.0</span>
+      <h1>Coherence for the prose subset of project rules that can't be expressed as policy.</h1>
+      <p class="lead">A Claude Code plugin that detects when one session's view of a shared artifact — <code>CLAUDE.md</code>, <code>plan.md</code>, a spec, a runbook, a <code>DECISIONS.md</code> — drifts from another session's, or from the version that survived compaction. The configurable rules go in <code>permissions.deny</code>. The prose residue that can't go to policy lives here, version-tracked across sessions and worktrees.</p>
+
+      <div class="install">
+        <code><span class="prompt">❯</span> claude plugin marketplace add <span class="pkg">hipvlady/agent-coherence-plugin</span></code>
+        <button class="copy-btn" data-copy="claude plugin marketplace add hipvlady/agent-coherence-plugin">Copy</button>
+      </div>
+
+      <div class="ctas">
+        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=plugin" rel="noopener" data-cta-target="cal" data-cta-location="hero">Request alpha access →</a>
+        <a class="btn" href="https://github.com/hipvlady/agent-coherence-plugin?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=plugin" rel="noopener" data-cta-target="github" data-cta-location="hero">View on GitHub</a>
+        <a class="btn" href="#scenes">See it run ↓</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="scenes">
+    <div class="container">
+      <h2>What it looks like in a session.</h2>
+      <p>Four scenes from a real claude run, captured as static screenshots. The warning text in scene 3 is the output of the plugin's <code>PreToolUse:Read</code> hook — verbatim from <code>ccs.adapters.claude_code.hook_payloads.stale_read_warning()</code> in the library, the actual code path that fires when the coordinator detects a stale view.</p>
+
+      <article class="scene-card scene-context">
+        <header>
+          <p class="scene-num">1</p>
+          <div>
+            <h3>Two sessions, one plan.</h3>
+            <p class="scene-meta">Session A read <code>docs/plans/feature-x.md</code> 30 minutes ago. Session B just updated it. The plan describes a multi-step deploy that just changed.</p>
+          </div>
+        </header>
+        <img class="scene-shot" src="stale-read-scene-1.png" alt="Terminal screenshot showing the cat command output of docs/plans/feature-x.md — the file contains a numbered list of five deployment steps including a database migration, API endpoint, tests, feature flag wiring, and a 10 percent to 100 percent rollout cohort over one week. The header marks it as v4 updated 2026-05." loading="lazy" />
+      </article>
+
+      <article class="scene-card scene-context">
+        <header>
+          <p class="scene-num">2</p>
+          <div>
+            <h3>Session A is asked to read it.</h3>
+            <p class="scene-meta">A <code>claude</code> invocation with <code>--include-hook-events --output-format stream-json</code> shows the hook events firing in line with the model's tool calls. The plugin's <code>SessionStart</code> hook reports the coordinator is ready; the assistant chooses the <code>Read</code> tool.</p>
+          </div>
+        </header>
+        <img class="scene-shot" src="stale-read-scene-2.png" alt="Terminal screenshot of the claude command invocation with hook-events and stream-json flags, followed by the init event, the SessionStart hook event reporting coordinator ready on port 50311, and the assistant's tool_use message naming Read with file_path docs/plans/feature-x.md." loading="lazy" />
+      </article>
+
+      <article class="scene-card scene-pivot">
+        <header>
+          <p class="scene-num">3</p>
+          <div>
+            <h3>The plugin intercepts — the stale-read warning is injected.</h3>
+            <p class="scene-meta">Before the <code>Read</code> tool call executes, the plugin's <code>PreToolUse:Read</code> hook fires. <code>additionalContext</code> arrives in the agent's working memory: this file was updated by another session, your view is stale, here's the current version, consider re-reading. <strong>The load-bearing visual.</strong></p>
+          </div>
+        </header>
+        <img class="scene-shot" src="stale-read-scene-3.png" alt="Terminal screenshot of the PreToolUse Read hook event firing with decision allow. The additionalContext field contains a multi-line stale-read warning marked with a warning emoji: it states the file was updated by session a3f1c2b0, that the current version is v3, that this is the first time the session has observed this artifact because another session in the workspace registered it first, that the worktree content matches the last-recorded hash so the divergence is purely about version-tracking metadata, and recommends re-reading the file before acting on stale assumptions." loading="lazy" />
+      </article>
+
+      <article class="scene-card scene-resolve">
+        <header>
+          <p class="scene-num">4</p>
+          <div>
+            <h3>The assistant acknowledges before acting.</h3>
+            <p class="scene-meta">With the warning in context, the model notes the divergence in its response instead of operating on a stale plan. <code>agent-coherence-status</code> confirms the coordinator's view of the artifact: v3, written by another session two minutes ago, no prior view from this session.</p>
+          </div>
+        </header>
+        <img class="scene-shot" src="stale-read-scene-4.png" alt="Terminal screenshot of the assistant's message acknowledging the coordinator flagged the file as updated by another session and that it is treating its view as potentially stale, followed by the agent-coherence-status command output reporting one tracked artifact docs/plans/feature-x.md at version 3 with last writer a3f1c2b0 from two minutes ago and no prior view from this session, plus the coordinator process information." loading="lazy" />
+      </article>
+
+      <p class="scene-footnote">All four screenshots come from <code>outreach/plugin-demo/montage.sh</code> in this repo — same pipeline that produced the demo described in <code>docs/demos/2026-05-17-stale-read-demo-script.md</code> in the plugin. The warning text is byte-for-byte the library's actual output; the surrounding stream-JSON is the format claude emits under <code>--output-format stream-json --include-hook-events</code>.</p>
+    </div>
+  </section>
+
+  <section id="category">
+    <div class="container">
+      <h2>Two classes of project rules. The plugin handles one of them.</h2>
+      <p>The shape of the problem comes from a real Claude Code thread: rules-as-prose are subject to context economics — any system where the rule is more fragile than the policy is going to leak. Split <code>CLAUDE.md</code> content into two classes and treat each correctly:</p>
+
+      <div style="overflow-x: auto;">
+      <table class="rules-table">
+        <thead>
+          <tr>
+            <th>Class</th>
+            <th>Substrate</th>
+            <th>Failure mode</th>
+            <th>Right fix</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="Class"><strong>Tool-class restrictions</strong></td>
+            <td data-label="Substrate"><code>settings.json</code> <code>permissions.deny</code> — durable config</td>
+            <td data-label="Failure mode">Subagent doesn't inherit prose rule → runs unrestricted tool</td>
+            <td data-label="Right fix">Migrate out of prose. <code>permissions.deny</code> survives subagent boundaries and compaction.</td>
+          </tr>
+          <tr class="this-row">
+            <td data-label="Class"><strong>Descriptive / architectural</strong></td>
+            <td data-label="Substrate"><code>CLAUDE.md</code>, <code>plan.md</code>, <code>spec.md</code>, <code>runbook.md</code>, <code>DECISIONS.md</code> — prose</td>
+            <td data-label="Failure mode">Can't be config-ified by definition. Degrades silently via compaction; propagates inconsistently to subagents; drifts across sessions in different worktrees.</td>
+            <td data-label="Right fix"><strong style="color: var(--text);">Versioning + coherence tracking. This is where the plugin sits.</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <p style="margin-top: 16px; font-size: 0.92rem;">The two fixes don't compete. Moving the tool-class rules out of <code>CLAUDE.md</code> into <code>permissions.deny</code> is hygiene that reduces the surface the plugin has to track. The prose residue — design constraints, architectural decisions, active-work artifacts — is what's left for coherence tracking.</p>
+    </div>
+  </section>
+
+  <section id="invariant">
+    <div class="container">
+      <h2>The coordination invariant.</h2>
+      <p>Six issues on the public Claude Code tracker, over three months, across two surfaces, share one underlying shape: <strong>the runtime emits coordination signals that don't reflect actual state.</strong> A capability or piece of state appears honored; the runtime can't honor it; the LLM completes the call as text rather than the system surfacing a hard failure.</p>
+
+      <aside class="invariant">
+        <h3>Three places the same shape shows up.</h3>
+        <p><strong>Rules-as-prose layer.</strong> <code>CLAUDE.md</code> isn't in context after compaction; subagents don't inherit it on spawn. The instruction looks present from the outside; the runtime can't surface it.</p>
+        <p><strong>ACK layer.</strong> A notification fires before the underlying process terminates; a claim doesn't wait for readiness. The completion signal looks delivered; the system isn't actually in the state it claims.</p>
+        <p><strong>Artifact-state layer.</strong> One session's view of a shared file doesn't reflect another session's update. The read looks current; the bytes the agent's reasoning is based on are stale.</p>
+      </aside>
+
+      <p>agent-coherence is the artifact-layer instance of this cross-cutting invariant: <em>signals about shared state must reflect actual state</em>. The plugin enforces "your session has seen artifact version V; the coordinator's current version is V+N from session B" — the same shape as "buffer the notification until the result actually lands" or "don't claim the rule is present when it isn't in context."</p>
+
+      <p>The runtime fixes for the other two layers are upstream — they're work Anthropic owns. The plugin doesn't compete with them. It sits at the layer those fixes don't reach: <strong>concurrent multi-session state coherence across worktrees and across mid-session artifact edits.</strong></p>
+    </div>
+  </section>
+
+  <section id="tam">
+    <div class="container">
+      <h2>It's not just <code>CLAUDE.md</code>.</h2>
+      <p>The same fragility applies to skill instructions and slash-command prompts loaded at session start. Anything important loaded at the session boundary — which is to say, anything loaded at a boundary that compaction crosses — has the same shape. <code>CLAUDE.md</code> is the visible case; every plugin that loads instructions at session start (slash commands, skill prompts, project rules) inherits it.</p>
+      <p>If your team relies on prose-shaped context surviving across sessions, the artifact category extends well beyond plan files.</p>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="container">
+      <h2>How it ships.</h2>
+      <p>One-line marketplace install. The plugin wires <code>PreToolUse:Read</code> and <code>PreToolUse:Edit|Write</code> hooks into Claude Code's hook system; a small coordinator process runs in the background per workspace, tracking artifact versions across sessions. SQLite-backed for crash recovery and post-compaction rehydration; <code>permissions.deny</code>-aware so it doesn't double-warn on tools the config already blocks.</p>
+
+      <pre style="background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; overflow-x: auto; font-size: 0.875rem; line-height: 1.55; margin: 16px 0 24px;"><span style="color: var(--muted);">❯</span> claude plugin marketplace add hipvlady/agent-coherence-plugin
+<span style="color: var(--muted);">❯</span> claude plugin install agent-coherence
+<span style="color: var(--muted);">❯</span> agent-coherence-track docs/plans/feature-x.md
+<span style="color: var(--muted);">❯</span> agent-coherence-status
+<span style="color: var(--muted);"># next claude session that reads a tracked file sees the warning</span>
+<span style="color: var(--muted);"># above when another session has touched it</span></pre>
+
+      <p>Install measured at 27 seconds end-to-end (claude v2.1.131) on the alpha install, with the agent-coherence library on PyPI as the gating dependency.</p>
+    </div>
+  </section>
+
+  <section id="cta">
+    <div class="container">
+      <div class="cta-strip">
+        <div>
+          <h3>Building production multi-session workflows on Claude Code?</h3>
+          <p>15-minute call. Walk me through your <code>CLAUDE.md</code> + subagent setup; I'll tell you whether the plugin holds up under your specific compaction + worktree patterns. Private alpha for ~10 hand-picked installers; v0.1.1 marketplace listing on a 4-week timeline.</p>
+        </div>
+        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_bottom&utm_campaign=plugin" rel="noopener" data-cta-target="cal" data-cta-location="bottom">Book a call →</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site">
+    <div class="container">
+      <span>© 2026 agent-coherence · Apache-2.0</span>
+      <nav aria-label="Footer">
+        <a href="/" data-cta-target="home" data-cta-location="footer">Home</a>
+        <a href="/code/" data-cta-target="code-page" data-cta-location="footer">Code page</a>
+        <a href="https://github.com/hipvlady/agent-coherence-plugin?utm_source=agent-coherence.dev&utm_medium=footer&utm_campaign=plugin" rel="noopener" data-cta-target="github-plugin" data-cta-location="footer">Plugin repo</a>
+        <a href="https://github.com/hipvlady/agent-coherence?utm_source=agent-coherence.dev&utm_medium=footer&utm_campaign=plugin" rel="noopener" data-cta-target="github-library" data-cta-location="footer">Library repo</a>
+        <a href="https://arxiv.org/abs/2603.15183?utm_source=agent-coherence.dev&utm_medium=footer&utm_campaign=plugin" rel="noopener" data-cta-target="arxiv" data-cta-location="footer">arXiv</a>
+        <a href="mailto:contact@agent-coherence.dev" data-cta-target="email" data-cta-location="footer">contact@agent-coherence.dev</a>
+        <a class="social-icon" href="https://www.linkedin.com/company/agent-coherence/about/?utm_source=agent-coherence.dev&utm_medium=footer&utm_campaign=plugin" rel="noopener me" aria-label="agent-coherence on LinkedIn" data-cta-target="linkedin" data-cta-location="footer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.44-2.13 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/>
+          </svg>
+        </a>
+      </nav>
     </div>
   </footer>
+
+  <script>
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const text = btn.getAttribute('data-copy');
+        navigator.clipboard.writeText(text).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = orig; }, 1500);
+          if (window.gtag) gtag('event', 'plugin_install_copied', { snippet: text, location: 'plugin' });
+        });
+      });
+    });
+
+    document.querySelectorAll('[data-cta-target]').forEach(el => {
+      el.addEventListener('click', () => {
+        if (!window.gtag) return;
+        gtag('event', 'cta_click', {
+          cta_target: el.getAttribute('data-cta-target'),
+          cta_location: el.getAttribute('data-cta-location') || 'unknown',
+          cta_text: (el.textContent || '').trim().slice(0, 60),
+          page: 'plugin'
+        });
+      });
+    });
+  </script>
 
 </body>
 </html>

@@ -119,15 +119,15 @@ for n in 1 2 3 4; do
     "$cast" "$gif"
 done
 
-# ─── Composite into a single PNG via Pillow ─────────────────────────────────
-echo "─── compositing 2x2 montage ────────────────────────────────"
-"$VENV_PYTHON" - "$SCRATCH" "$HERE/stale-read-montage.png" <<'PYEOF'
+# ─── Composite via Pillow: 4 individual PNGs + 1 2x2 montage ──────────────
+echo "─── compositing scenes ─────────────────────────────────────"
+"$VENV_PYTHON" - "$SCRATCH" "$HERE" <<'PYEOF'
 import sys
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 scratch = Path(sys.argv[1])
-out = Path(sys.argv[2])
+out_dir = Path(sys.argv[2])
 
 # Open the 4 scene GIFs as PIL images (first frame).
 scenes = [Image.open(scratch / f"scene-{n}.gif").convert("RGB") for n in (1, 2, 3, 4)]
@@ -143,9 +143,17 @@ def pad(img):
     canvas.paste(img, ((max_w - img.width) // 2, 0))
     return canvas
 
-scenes = [pad(s) for s in scenes]
+padded = [pad(s) for s in scenes]
 
-# Label strip per panel — small caption above each scene.
+# Save individual scene PNGs (no per-panel caption — the /test page
+# emits scene labels in HTML alongside each image so screen readers see
+# the label as text and search engines index it).
+for n, img in enumerate(padded, start=1):
+    fname = out_dir / f"stale-read-scene-{n}.png"
+    img.save(fname, "PNG", optimize=True)
+    print(f"  wrote {fname.name} ({fname.stat().st_size // 1024} KB) — {img.width}x{img.height}")
+
+# Label strip per panel for the combined montage view.
 LABEL_H = 38
 LABELS = [
     "1 — the plan two sessions are sharing",
@@ -153,11 +161,9 @@ LABELS = [
     "3 — the plugin intercepts: stale-read warning injected",
     "4 — assistant acknowledges, status shows v3 by another session",
 ]
-LABEL_COLOR = (94, 234, 212)  # accent
-LABEL_BG = (19, 20, 24)       # surface
-NUM_COLOR = (232, 232, 234)   # text
+LABEL_COLOR = (94, 234, 212)
+LABEL_BG = (19, 20, 24)
 
-# Pick a system font — fall back to default if not found.
 font = None
 for candidate in (
     "/System/Library/Fonts/SFNSMono.ttf",
@@ -173,7 +179,6 @@ for candidate in (
 if font is None:
     font = ImageFont.load_default()
 
-# Compose each labeled panel (label strip + scene image).
 def labeled(scene_img, text):
     panel = Image.new("RGB", (max_w, LABEL_H + max_h), LABEL_BG)
     d = ImageDraw.Draw(panel)
@@ -181,9 +186,8 @@ def labeled(scene_img, text):
     panel.paste(scene_img, (0, LABEL_H))
     return panel
 
-labeled_scenes = [labeled(scenes[i], LABELS[i]) for i in range(4)]
+labeled_scenes = [labeled(padded[i], LABELS[i]) for i in range(4)]
 
-# 2x2 grid — total dimensions.
 gap = 14
 panel_w = max_w
 panel_h = LABEL_H + max_h
@@ -192,17 +196,18 @@ total_h = panel_h * 2 + gap * 3
 
 montage = Image.new("RGB", (total_w, total_h), BG)
 positions = [
-    (gap, gap),                                     # top-left
-    (gap * 2 + panel_w, gap),                       # top-right
-    (gap, gap * 2 + panel_h),                       # bottom-left
-    (gap * 2 + panel_w, gap * 2 + panel_h),         # bottom-right
+    (gap, gap),
+    (gap * 2 + panel_w, gap),
+    (gap, gap * 2 + panel_h),
+    (gap * 2 + panel_w, gap * 2 + panel_h),
 ]
 for img, pos in zip(labeled_scenes, positions):
     montage.paste(img, pos)
 
-montage.save(out, "PNG", optimize=True)
-print(f"  wrote {out} ({out.stat().st_size // 1024} KB) — {total_w}x{total_h}")
+montage_path = out_dir / "stale-read-montage.png"
+montage.save(montage_path, "PNG", optimize=True)
+print(f"  wrote {montage_path.name} ({montage_path.stat().st_size // 1024} KB) — {total_w}x{total_h}")
 PYEOF
 
 rm -rf "$SCRATCH"
-echo "─── done: $HERE/stale-read-montage.png ─────────────────────────"
+echo "─── done ───────────────────────────────────────────────────"
