@@ -34,9 +34,19 @@ The two fixes don't compete. Moving config-able rules to `permissions.deny` is h
 - **`permissions.deny`-aware.** Doesn't double-warn on tools the config already blocks.
 - **One-line install.** `claude plugin marketplace add hipvlady/agent-coherence-plugin` — measured at 27 seconds end-to-end on the alpha install with the library pre-installed.
 
+## What the library fits in coding-agent workflows
+
+agent-coherence is the coherence layer for any setup where multiple agents share mutable artifacts:
+
+- **Subagent fleets reviewing the same codebase** — style + security + architecture + synthesizer reviewers on the same files, with cache hits on the second-through-Nth read instead of re-reading from scratch.
+- **Planner-executor pairs editing a shared task spec** — the planner re-plans mid-flight (writes v2 with a 4th caller); the executor's behavior depends on whether write-side coherence is on.
+- **Refactor graphs fanning out across worktrees** — multiple sub-agents touching the same files concurrently; the coordinator enforces single-writer ordering and invalidates stale caches before commits land.
+
 ## Measured impact (library)
 
-Reproducible benchmarks on real LangGraph graphs (CI uses `GenericFakeChatModel`; no live API calls):
+### Simulation benchmarks
+
+Reproducible on real LangGraph graphs in CI (uses `GenericFakeChatModel`; no live API calls):
 
 | Workload | Reads:Writes | Cache hit rate | Token savings |
 |---|---|---|---|
@@ -44,13 +54,48 @@ Reproducible benchmarks on real LangGraph graphs (CI uses `GenericFakeChatModel`
 | Code review (moderate) | 8:3 | 60% | 47% |
 | High-churn (write-heavy) | 8:4 | 50% | 29% |
 
-Plus a real 4-agent code-review pipeline that ships in the repo as a working example (`examples/shared_codebase/`):
+Reproduce: `make benchmark` after `pip install -e ".[langgraph,benchmark]"`.
 
-- 37.6% token reduction per run (real LangGraph, not simulation)
+### Real-LangGraph 4-agent code review
+
+The repo ships `examples/shared_codebase/` as a working example: four reviewer subagents (style + security + architecture + synthesizer) read the same eight files in two passes each through `CCSStore`. Real LangGraph, deterministic fixture, no LLM API calls.
+
+- 37.6% token reduction per run
 - 16,820 tokens saved (44,702 → 27,882 per run)
 - 35.3% cache hit rate over 51 read ops
 
-Reproduce with `make benchmark` or `python -m examples.shared_codebase.main` after `pip install -e ".[langgraph,benchmark]"`.
+Reproduce: `python -m examples.shared_codebase.main`.
+
+### Recorded planner-executor refactor (three variants)
+
+`examples/refactor_demo/` is a recorded demo showing two scripted sub-agents collaborating on a TypeScript refactor through `CCSStore`. The planner writes v1 of a task spec (rename 3 callers); the executor reads v1; the planner discovers a 4th caller and writes v2 mid-flight. Real `tsc --noEmit` against a real TypeScript fixture turns the correctness question into an on-screen build error.
+
+Three variants assert the protocol mechanism + the application-level consequence:
+
+- **`with`** — default `CCSStore`, lazy strategy. Executor reads v1 (cache SHARED), planner writes v2 (executor cache → INVALID), executor re-reads at commit → fetches v2. Op log: `[MISS][MISS][MISS][MISS]`. Outcome: `committed spec v2 (5 files renamed)`, `tsc: OK`.
+- **`no-invalidation`** — `disable_invalidation(store)` patches the event bus' `publish_invalidation` to no-op. Executor cache stays SHARED at v1; commit-time get is `[HIT]` on stale v1. Op log: `[MISS][MISS][MISS][HIT]`. Outcome: `committed spec v1 (4 files)`, `tsc: FAIL TS2305` on `src/utils/session.ts`. **The protocol-level proof** — same code path, single-line bus suppression, different outcome.
+- **`context-cache`** — executor never re-reads from the store; commits from the v1 spec it captured at read time. Mirrors LLM context-window behavior. Op log: `[MISS][MISS][MISS]` (only 3 ops; no commit-time read). Same `tsc: FAIL` outcome as `no-invalidation`. **The audience-facing demo** — same outcome as `no-invalidation`, with the mechanism (executor never re-reads) being what real LLM agents naturally exhibit in production.
+
+Reproduce: `python -m examples.refactor_demo.main --variant=with|no-invalidation|context-cache`. See `outreach/demo/record.sh` in the website repo for the recording pipeline used on agent-coherence.dev/code.
+
+## State-transitions visualization (the protocol in 4 beats)
+
+The protocol's behavior on a single shared artifact, animated on agent-coherence.dev/code:
+
+1. `t=0` — Planner writes v1 to the coordinator. Executor cache: empty.
+2. `t=1` — Executor reads v1 from the coordinator. Executor cache: v1.
+3. `t=2` — Planner writes v2. `CCSStore` publishes invalidation to peers before `write()` returns. Executor cache: INVALID.
+4. `t=3` — Executor's next `get()` is MISS (cache invalidated); refetches v2. Executor cache: v2. `tsc` passes.
+
+Single-writer ordering invariant: only one agent holds write permission on an artifact at a time. Monotonic versioning invariant: versions only increase. Both checked by `core/invariants.py` after every write/commit/invalidation.
+
+## The trajectory framing (why this matters now)
+
+Today's coding sub-agents run on **frozen specs**: the planner finishes, freezes a plan, then the executor runs. The two stages don't overlap, so coherence doesn't matter — the executor sees whatever the planner committed before exiting.
+
+Tomorrow's coding sub-agents don't run that way. Deep Agents already does live re-planning. As soon as planners and executors run in parallel, frozen specs become stale specs, and stale specs become silent build failures. Coherence is what lets re-planning land in production without trampling the work already underway.
+
+Pattern names showing up in production today: Claude Code Task subagent fleets, LangGraph code-review graphs with three or four reviewers on the same artifact, refactor pipelines fanning out planners and executors that edit a shared task spec. As of 2026, Anthropic's Agent View productized 10+ parallel Claude Code sessions in a single workspace — Research Preview, no documented state-isolation model.
 
 ## Install
 
