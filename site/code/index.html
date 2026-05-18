@@ -618,8 +618,8 @@
       <nav class="site" aria-label="Primary">
         <a href="/#how">How</a>
         <a href="/#frameworks">Frameworks</a>
-        <a href="/#stack">Stack</a>
         <a class="current" href="/code/">Code</a>
+        <a href="/plugin/" data-cta-target="plugin-page" data-cta-location="nav">Plugin</a>
         <a href="/#faq">FAQ</a>
         <a href="https://github.com/hipvlady/agent-coherence?utm_source=agent-coherence.dev&utm_medium=nav&utm_campaign=code" rel="noopener" data-cta-target="github" data-cta-location="nav">GitHub</a>
       </nav>
@@ -843,6 +843,10 @@ ccs-diagnose --graph my_graph.py:build_graph</pre>
         <p>Today's coding sub-agents run on <strong>frozen specs</strong>: the planner finishes, freezes a plan, then the executor runs.</p>
         <p>Tomorrow's don't. Deep Agents already does live re-planning. As soon as planners and executors run in parallel, frozen specs become stale specs, and stale specs become silent build failures. Coherence is what lets re-planning land in production without trampling the work that's already underway.</p>
       </aside>
+
+      <p style="margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.96rem;">
+        Using <strong style="color: var(--text);">Claude Code</strong> rather than calling the library directly? The same coherence machinery ships as a Claude Code plugin that injects stale-read warnings into your session when another session has touched a tracked artifact (<code>CLAUDE.md</code>, <code>plan.md</code>, <code>spec.md</code>, runbooks). <a href="/plugin/" data-cta-target="plugin-page" data-cta-location="trajectory-footer" style="color: var(--accent); border-bottom: 1px dotted var(--accent-dim); text-decoration: none;">See the plugin landing page →</a>
+      </p>
     </div>
   </section>
 
