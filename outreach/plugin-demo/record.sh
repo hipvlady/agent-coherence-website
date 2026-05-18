@@ -77,7 +77,8 @@ agg \
   --speed 1.0 \
   --last-frame-duration 3 \
   --theme "0a0a0a,e8e8ea,0a0a0a,fb7185,5eead4,c084fc,5eead4,c084fc,5eead4,e8e8ea" \
-  --font-size 14 \
+  --font-size 20 \
+  --fps-cap 24 \
   "$CAST" "$GIF"
 
 echo "─── done ──────────────────────────────────────────────────────────────"
