@@ -88,6 +88,18 @@
       border-radius: 10px;
       background: #0a0a0a;
     }
+    .demo-montage {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+      margin: 12px 0 8px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      background: #0a0a0a;
+      image-rendering: -webkit-optimize-contrast;
+    }
 
     .honesty-card {
       margin: 24px 0;
@@ -157,7 +169,15 @@
 
     <section>
       <h2>The recording</h2>
-      <img class="demo-gif" src="stale-read.gif" alt="Asciinema GIF showing a staged claude session: the user runs claude with the stream-JSON hook events flag and a Read request against docs/plans/feature-x.md. The plugin's PreToolUse:Read hook fires and injects a Stale read warning into the agent's additionalContext, indicating the file was updated by another session and recommending a re-read. The assistant acknowledges the warning before answering. The agent-coherence-status command then shows the artifact's tracked version. About 17 seconds of content plus a 3-second pause before the loop restarts." loading="lazy" />
+      <img class="demo-gif" src="stale-read.gif" alt="Asciinema GIF showing a staged claude session: the user runs claude with the stream-JSON hook events flag and a Read request against docs/plans/feature-x.md. The plugin's PreToolUse:Read hook fires and injects a Stale read warning into the agent's additionalContext, indicating the file was updated by another session and recommending a re-read. The assistant acknowledges the warning before answering. The agent-coherence-status command then shows the artifact's tracked version. About 29 seconds of content plus a 3-second pause before the loop restarts." loading="lazy" />
+    </section>
+
+    <section>
+      <h2>Alternative — 4-panel PNG montage</h2>
+      <p>The source script names a fallback at the bottom: <em>"Take the 4 scenes as still screenshots and string them as a 4-panel PNG montage. The warning text in scene 3 is the load-bearing visual; everything else is context. A montage is acceptable for v0.1 alpha if recorded video lags marketplace submission for v0.1.1."</em></p>
+      <p>Same content, no playback dependency — viable wherever GIF embedding is awkward (a static README, a slide deck, a marketplace listing with a single-image limit, or any platform that doesn't auto-play animations on mobile).</p>
+      <img class="demo-montage" src="stale-read-montage.png" alt="Four-panel static montage of the stale-read demo: panel 1 shows the plan.md content two sessions are sharing; panel 2 shows the claude invocation with stream-JSON output flag and the initial hook events; panel 3 shows the load-bearing visual — the plugin's stale-read warning text injected into the agent's additionalContext via PreToolUse:Read; panel 4 shows the agent's acknowledgement plus the agent-coherence-status output reporting v3 by another writer." loading="lazy" />
+      <p style="margin-top: 12px; color: var(--muted); font-size: 0.86rem;">PNG · 146&nbsp;KB · 1820×1378 native, scaled to container width.</p>
     </section>
 
     <section>
