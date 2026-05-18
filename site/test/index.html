@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>/test — stale-read demo preview</title>
+
+  <!--
+    STATUS: PREVIEW — not for public consumption.
+    noindex + nofollow; not linked from /, not in sitemap.xml.
+    Built for evaluation per the v0.1 plan's Unit 10 demo recording,
+    sourced from outreach/plugin-demo/.
+  -->
+
+  <meta name="description" content="Internal preview of the agent-coherence-plugin stale-read demo recording.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="color-scheme" content="dark light">
+
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #131418;
+      --surface-2: #1a1c22;
+      --border: #262830;
+      --text: #e8e8ea;
+      --muted: #9095a0;
+      --accent: #5eead4;
+      --accent-dim: #14b8a6;
+      --warn: #fb7185;
+      --code-bg: #11131a;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --surface: #f7f8fa;
+        --surface-2: #eef0f4;
+        --border: #e3e5ea;
+        --text: #0a0a0a;
+        --muted: #5a6070;
+        --accent: #0d9488;
+        --code-bg: #f1f3f7;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .container { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    h1 { font-size: clamp(1.5rem, 4vw, 2.1rem); letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 14px; }
+    h2 { font-size: 1.2rem; letter-spacing: -0.01em; margin: 36px 0 12px; }
+    p.lead { font-size: 1.06rem; color: var(--muted); }
+
+    .preview-banner {
+      background: rgba(251, 113, 133, 0.08);
+      border: 1px solid rgba(251, 113, 133, 0.35);
+      color: var(--warn);
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      text-align: center;
+      margin: 18px 0 0;
+    }
+
+    section { padding: 24px 0; }
+    .container > p { color: var(--muted); }
+    .container > p strong { color: var(--text); }
+
+    .demo-gif {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+      margin: 12px 0 24px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--warn);
+      border-radius: 10px;
+      background: #0a0a0a;
+    }
+
+    .honesty-card {
+      margin: 24px 0;
+      padding: 22px 24px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+    .honesty-card h3 { margin: 0 0 10px; font-size: 1rem; font-weight: 700; }
+    .honesty-card p { margin: 0 0 8px; color: var(--muted); font-size: 0.94rem; line-height: 1.6; }
+    .honesty-card p:last-child { margin-bottom: 0; }
+    .honesty-card strong { color: var(--text); }
+    .honesty-card code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+
+    .real-vs-staged {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .real-vs-staged > div {
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .real-vs-staged h4 {
+      margin: 0 0 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .real-vs-staged .real h4 { color: var(--accent); }
+    .real-vs-staged .staged h4 { color: var(--warn); }
+    .real-vs-staged ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.9rem; line-height: 1.55; }
+    .real-vs-staged li { margin: 4px 0; }
+    @media (max-width: 640px) {
+      .real-vs-staged { grid-template-columns: 1fr; }
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 0;
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer .container { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <p class="preview-banner">PREVIEW · noindex · staged cast — not for public release</p>
+
+    <section>
+      <h1>Stale-read demo · preview</h1>
+      <p class="lead">Path-B recording per the source script at <code>docs/demos/2026-05-17-stale-read-demo-script.md</code> in the plugin repo. The warning text is the verbatim output of <code>ccs.adapters.claude_code.hook_payloads.stale_read_warning()</code>; the orchestration around it is staged so the cast reproduces faithfully without depending on a configured <code>claude</code> CLI + a live Haiku API call.</p>
+    </section>
+
+    <section>
+      <h2>The recording</h2>
+      <img class="demo-gif" src="stale-read.gif" alt="Asciinema GIF showing a staged claude session: the user runs claude with the stream-JSON hook events flag and a Read request against docs/plans/feature-x.md. The plugin's PreToolUse:Read hook fires and injects a Stale read warning into the agent's additionalContext, indicating the file was updated by another session and recommending a re-read. The assistant acknowledges the warning before answering. The agent-coherence-status command then shows the artifact's tracked version. About 17 seconds of content plus a 3-second pause before the loop restarts." loading="lazy" />
+    </section>
+
+    <section>
+      <h2>What's authentic, what's staged</h2>
+      <div class="real-vs-staged">
+        <div class="real">
+          <h4>Authentic (byte-for-byte)</h4>
+          <ul>
+            <li>The ⚠ warning text — exact output of <code>stale_read_warning()</code> in <code>hook_payloads.py</code></li>
+            <li>The <code>hooks.json</code> contract (PreToolUse:Read · Edit|Write · PostToolUse · SessionStart · Stop)</li>
+            <li>The <code>agent-coherence-status</code> output shape (matches the CLI's <code>track</code>/<code>untrack</code>/<code>status</code> command grammar)</li>
+            <li>The plan content (<code>docs/plans/feature-x.md</code>) is the demo-script's seed verbatim</li>
+            <li>The session-id / writer-id / port shapes match the plugin's actual format</li>
+          </ul>
+        </div>
+        <div class="staged">
+          <h4>Staged (for clarity / no API call)</h4>
+          <ul>
+            <li>The cast emits the stream-JSON itself via <code>printf</code>; no <code>claude</code> CLI invocation</li>
+            <li>Timestamps are fixed (<code>2026-05-17T12:34:56+00:00</code>) so the GIF is reproducible</li>
+            <li>The "assistant response" text is hand-written; a real Haiku call would produce a similar shape but not the same words</li>
+            <li>The SQLite pre-seeding the source script describes is implicit — the cast renders the outcome, not the orchestration that produced it</li>
+            <li>Line-wrapped warning over multiple printf calls for readability; the actual <code>additionalContext</code> arrives as a single string</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>How to evaluate</h2>
+      <div class="honesty-card">
+        <h3>Things to look at</h3>
+        <p><strong>Visual rhythm.</strong> Does the eye land on the ⚠ warning at the right moment? The 4-second absorption pause after the warning text is the load-bearing visual the source script asks for.</p>
+        <p><strong>Warning legibility.</strong> Can you read the entire warning sentence as it scrolls? If the multi-line wrap is awkward, the fixture script can re-pace.</p>
+        <p><strong>Authenticity feel.</strong> Does the cast read as a real claude session? The intent is "staged but indistinguishable from real" — if anything reads as obviously fake, flag it.</p>
+        <p><strong>File size.</strong> The current GIF is 687&nbsp;KB. Cast is 3.2&nbsp;KB. Could compress further by trimming repetitive printf newlines or reducing font size.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Promotion path (if this evaluates well)</h2>
+      <div class="honesty-card">
+        <h3>Two destinations the source script names</h3>
+        <p>Per the script at the top, the recording targets <strong>Unit 10 marketplace listing</strong> (<code>claude plugin marketplace</code> thumbnail) and <strong>the marketing <code>/code</code> page</strong> on this site.</p>
+        <p>Suggested cuts for each:</p>
+        <p>→ <strong>Marketplace</strong>: the same 17-second cast plus 3-second pause works as-is. The asciinema cast (3.2&nbsp;KB) is the right format for any platform that accepts embed snippets; the 687&nbsp;KB GIF works for static thumbnails.</p>
+        <p>→ <strong><code>/code</code> page</strong>: add as a fourth section below the existing planner-executor refactor demo, framed as "stale-read detection without a code change — when the writer is another session." The two demos share grammar (op-log + result) so they slot in cleanly.</p>
+        <p>→ <strong>When the plugin is actually installed locally</strong>: replace this staged cast with the authentic one from the source script's Recording section. Same record/trim/render pipeline (<code>outreach/plugin-demo/record.sh</code>) re-runs against a real <code>claude</code> invocation. The fixture script can be deleted at that point.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    <div class="container">
+      <span>Preview only · noindex · staged recording</span>
+      <span>Source: <code>outreach/plugin-demo/</code></span>
+    </div>
+  </footer>
+
+</body>
+</html>
