@@ -107,9 +107,29 @@ for n in 1 2 3 4; do
   asciinema convert --overwrite --output-format=asciicast-v2 "$cast_v3" "$cast"
   rm -f "$cast_v3"
 
+  # Asciinema headless ignores --rows, so the cast writes default height=24.
+  # Each scene has a different actual content height — shrink the cast's
+  # header.height to just fit so agg doesn't render empty terminal rows
+  # beneath the content (which is what was making the screenshots tall).
+  case "$n" in
+    1) HEIGHT=9 ;;    # prompt + 8-line plan
+    2) HEIGHT=7 ;;    # claude invocation + 3 JSON events
+    3) HEIGHT=12 ;;   # 11-line warning + opening brace
+    4) HEIGHT=11 ;;   # assistant content + blank + status output
+  esac
+  python3 - "$cast" "$HEIGHT" <<'PYEOF'
+import json, sys
+path, height = sys.argv[1], int(sys.argv[2])
+with open(path) as f:
+    header = json.loads(f.readline())
+    events = [l for l in f if l.strip()]
+header["height"] = height
+with open(path, "w") as f:
+    f.write(json.dumps(header) + "\n")
+    f.writelines(events)
+PYEOF
+
   # Single-frame render: render the LAST frame as a tiny "still" GIF.
-  # --last-frame-duration absorbs all the playback time so agg renders
-  # only one frame (~1 KB) — but we still get the full visual state.
   agg \
     --speed 100 \
     --last-frame-duration 0.04 \
@@ -132,26 +152,25 @@ out_dir = Path(sys.argv[2])
 # Open the 4 scene GIFs as PIL images (first frame).
 scenes = [Image.open(scratch / f"scene-{n}.gif").convert("RGB") for n in (1, 2, 3, 4)]
 
-# Normalize widths/heights to the largest so the grid is uniform.
+# Save individual scene PNGs at their NATURAL height (no padding) — each
+# scene's height is already tuned via the cast header.height override in
+# the bash loop above so empty terminal rows aren't rendered. /test page
+# emits scene labels in HTML alongside each image.
+for n, img in enumerate(scenes, start=1):
+    fname = out_dir / f"stale-read-scene-{n}.png"
+    img.save(fname, "PNG", optimize=True)
+    print(f"  wrote {fname.name} ({fname.stat().st_size // 1024} KB) — {img.width}x{img.height}")
+
+# For the 2x2 combined montage, pad to uniform dimensions so the grid
+# looks balanced. Individual PNGs above stay at natural sizes.
 max_w = max(s.width for s in scenes)
 max_h = max(s.height for s in scenes)
-
-# Pad each scene to (max_w, max_h) with the same dark background.
-BG = (10, 10, 10)  # #0a0a0a — matches the site's --bg
+BG = (10, 10, 10)
 def pad(img):
     canvas = Image.new("RGB", (max_w, max_h), BG)
     canvas.paste(img, ((max_w - img.width) // 2, 0))
     return canvas
-
 padded = [pad(s) for s in scenes]
-
-# Save individual scene PNGs (no per-panel caption — the /test page
-# emits scene labels in HTML alongside each image so screen readers see
-# the label as text and search engines index it).
-for n, img in enumerate(padded, start=1):
-    fname = out_dir / f"stale-read-scene-{n}.png"
-    img.save(fname, "PNG", optimize=True)
-    print(f"  wrote {fname.name} ({fname.stat().st_size // 1024} KB) — {img.width}x{img.height}")
 
 # Label strip per panel for the combined montage view.
 LABEL_H = 38

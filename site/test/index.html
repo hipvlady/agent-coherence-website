@@ -206,6 +206,32 @@
     .scene-footnote a { color: var(--accent); border-bottom: 1px dotted var(--accent-dim); }
     .scene-footnote a:hover { border-bottom-style: solid; }
 
+    /* Aphorism pull-quote — the load-bearing observation */
+    .aphorism {
+      margin: 18px auto;
+      max-width: 720px;
+      padding: 18px 24px;
+      border-left: 3px solid var(--accent);
+      background:
+        linear-gradient(90deg, rgba(94, 234, 212, 0.06), transparent 70%),
+        var(--surface);
+      border-radius: 4px;
+    }
+    .aphorism p {
+      margin: 0;
+      font-size: 1.08rem;
+      font-style: italic;
+      color: var(--text);
+      line-height: 1.55;
+      letter-spacing: -0.01em;
+    }
+    .aphorism footer {
+      margin-top: 8px;
+      font-size: 0.84rem;
+      color: var(--muted);
+      font-style: normal;
+    }
+
     /* Two-class table — rules-as-prose vs rules-as-config */
     .rules-table {
       width: 100%;
@@ -413,7 +439,14 @@
   <section id="category">
     <div class="container">
       <h2>Two classes of project rules. The plugin handles one of them.</h2>
-      <p>The shape of the problem comes from a real Claude Code thread: rules-as-prose are subject to context economics — any system where the rule is more fragile than the policy is going to leak. Split <code>CLAUDE.md</code> content into two classes and treat each correctly:</p>
+      <p>Rules-as-prose are subject to context economics. The shape of the problem surfaced on a Claude Code thread as a single sentence:</p>
+
+      <aside class="aphorism">
+        <p>"Any system where the rule is more fragile than the policy is going to leak."</p>
+        <footer>— the observation that splits the table below into its two rows.</footer>
+      </aside>
+
+      <p>Split <code>CLAUDE.md</code> content into two classes and treat each correctly:</p>
 
       <div style="overflow-x: auto;">
       <table class="rules-table">
