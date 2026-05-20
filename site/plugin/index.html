@@ -253,6 +253,92 @@
     .scene-footnote a { color: var(--accent); border-bottom: 1px dotted var(--accent-dim); }
     .scene-footnote a:hover { border-bottom-style: solid; }
 
+    /* Install-cta-row — single copy button after the install snippet */
+    .install-cta-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: -4px;
+    }
+    .copy-btn {
+      padding: 7px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .copy-btn:hover { color: var(--accent); border-color: var(--accent-dim); }
+
+    /* "What the plugin doesn't do" — honesty bullets */
+    .not-list {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0;
+      display: grid;
+      gap: 10px;
+    }
+    .not-list li {
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--muted);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+    .not-list li strong { color: var(--text); }
+
+    /* Mechanism outcomes list — the two transcript paths */
+    .mechanism-outcomes {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0;
+      display: grid;
+      gap: 12px;
+    }
+    .mechanism-outcomes li {
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+    .mechanism-outcomes li strong { color: var(--text); }
+    .mechanism-outcomes li:nth-child(1) { border-left: 3px solid var(--accent); }
+    .mechanism-outcomes li:nth-child(2) { border-left: 3px solid var(--muted); }
+
+    /* Vendor pull-quote in hero — Anthropic guidance reframe */
+    .vendor-quote {
+      margin: 18px 0 4px;
+      padding: 16px 20px;
+      border-left: 3px solid var(--accent-dim);
+      background:
+        linear-gradient(90deg, rgba(94, 234, 212, 0.04), transparent 70%),
+        var(--surface);
+      border-radius: 4px;
+    }
+    .vendor-quote p {
+      margin: 0;
+      font-size: 1rem;
+      font-style: italic;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .vendor-quote footer {
+      margin-top: 8px;
+      font-size: 0.84rem;
+      color: var(--muted);
+      font-style: normal;
+      line-height: 1.55;
+    }
+    .vendor-quote footer strong { color: var(--text); }
+
     /* Aphorism pull-quote — the load-bearing observation */
     .aphorism {
       margin: 18px auto;
@@ -409,14 +495,14 @@
   <section class="hero">
     <div class="container">
       <p class="eyebrow">Claude Code plugin · coordination layer</p>
-      <span class="badge">v<span class="ver">0.1</span> · private alpha · Apache-2.0</span>
+      <span class="badge">v<span class="ver">0.1</span> · private alpha · launch-gate verified on claude v2.1.131</span>
       <h1>Coherence for the prose subset of project rules that can't be expressed as policy.</h1>
       <p class="lead">A Claude Code plugin that detects when one session's view of a shared artifact — <code>CLAUDE.md</code>, <code>plan.md</code>, a spec, a runbook, a <code>DECISIONS.md</code> — drifts from another session's, or from the version that survived compaction. The configurable rules go in <code>permissions.deny</code>. The prose residue that can't go to policy lives here, version-tracked across sessions and worktrees.</p>
 
-      <div class="install">
-        <code><span class="prompt">❯</span> claude plugin marketplace add <span class="pkg">hipvlady/agent-coherence-plugin</span></code>
-        <button class="copy-btn" data-copy="claude plugin marketplace add hipvlady/agent-coherence-plugin">Copy</button>
-      </div>
+      <aside class="vendor-quote">
+        <p>"For deterministic behavior, your best bet is to use hooks."</p>
+        <footer>— Anthropic's published guidance for project-rule enforcement in Claude Code (Aug 2025; restated 2026). The plugin is the hook implementation that closes the artifact-coherence gap.</footer>
+      </aside>
 
       <div class="ctas">
         <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=plugin" rel="noopener" data-cta-target="cal" data-cta-location="hero">Request alpha access →</a>
@@ -426,56 +512,16 @@
     </div>
   </section>
 
-  <section id="scenes">
+  <section id="mechanism">
     <div class="container">
-      <h2>What it looks like in a session.</h2>
-      <p>Four scenes from a real claude run, captured as static screenshots. The warning text in scene 3 is the output of the plugin's <code>PreToolUse:Read</code> hook — verbatim from <code>ccs.adapters.claude_code.hook_payloads.stale_read_warning()</code> in the library, the actual code path that fires when the coordinator detects a stale view.</p>
-
-      <article class="scene-card scene-context">
-        <header>
-          <p class="scene-num">1</p>
-          <div>
-            <h3>Two sessions, one plan.</h3>
-            <p class="scene-meta">Session A read <code>docs/plans/feature-x.md</code> 30 minutes ago. Session B just updated it. The plan describes a multi-step deploy that just changed.</p>
-          </div>
-        </header>
-        <img class="scene-shot" src="stale-read-scene-1.png" alt="Terminal screenshot showing the cat command output of docs/plans/feature-x.md — the file contains a numbered list of five deployment steps including a database migration, API endpoint, tests, feature flag wiring, and a 10 percent to 100 percent rollout cohort over one week. The header marks it as v4 updated 2026-05." loading="lazy" />
-      </article>
-
-      <article class="scene-card scene-context">
-        <header>
-          <p class="scene-num">2</p>
-          <div>
-            <h3>Session A is asked to read it.</h3>
-            <p class="scene-meta">A <code>claude</code> invocation with <code>--include-hook-events --output-format stream-json</code> shows the hook events firing in line with the model's tool calls. The plugin's <code>SessionStart</code> hook reports the coordinator is ready; the assistant chooses the <code>Read</code> tool.</p>
-          </div>
-        </header>
-        <img class="scene-shot" src="stale-read-scene-2.png" alt="Terminal screenshot of the claude command invocation with hook-events and stream-json flags, followed by the init event, the SessionStart hook event reporting coordinator ready on port 50311, and the assistant's tool_use message naming Read with file_path docs/plans/feature-x.md." loading="lazy" />
-      </article>
-
-      <article class="scene-card scene-pivot">
-        <header>
-          <p class="scene-num">3</p>
-          <div>
-            <h3>The plugin intercepts — the stale-read warning is injected.</h3>
-            <p class="scene-meta">Before the <code>Read</code> tool call executes, the plugin's <code>PreToolUse:Read</code> hook fires. <code>additionalContext</code> arrives in the agent's working memory: this file was updated by another session, your view is stale, here's the current version, consider re-reading. <strong>The load-bearing visual.</strong></p>
-          </div>
-        </header>
-        <img class="scene-shot" src="stale-read-scene-3.png" alt="Terminal screenshot of the PreToolUse Read hook event firing with decision allow. The additionalContext field contains a multi-line stale-read warning marked with a warning emoji: it states the file was updated by session a3f1c2b0, that the current version is v3, that this is the first time the session has observed this artifact because another session in the workspace registered it first, that the worktree content matches the last-recorded hash so the divergence is purely about version-tracking metadata, and recommends re-reading the file before acting on stale assumptions." loading="lazy" />
-      </article>
-
-      <article class="scene-card scene-resolve">
-        <header>
-          <p class="scene-num">4</p>
-          <div>
-            <h3>The assistant acknowledges before acting.</h3>
-            <p class="scene-meta">With the warning in context, the model notes the divergence in its response instead of operating on a stale plan. <code>agent-coherence-status</code> confirms the coordinator's view of the artifact: v3, written by another session two minutes ago, no prior view from this session.</p>
-          </div>
-        </header>
-        <img class="scene-shot" src="stale-read-scene-4.png" alt="Terminal screenshot of the assistant's message acknowledging the coordinator flagged the file as updated by another session and that it is treating its view as potentially stale, followed by the agent-coherence-status command output reporting one tracked artifact docs/plans/feature-x.md at version 3 with last writer a3f1c2b0 from two minutes ago and no prior view from this session, plus the coordinator process information." loading="lazy" />
-      </article>
-
-      <p class="scene-footnote">All four screenshots come from <code>outreach/plugin-demo/montage.sh</code> in this repo — same pipeline that produced the demo described in <code>docs/demos/2026-05-17-stale-read-demo-script.md</code> in the plugin. The warning text is byte-for-byte the library's actual output; the surrounding stream-JSON is the format claude emits under <code>--output-format stream-json --include-hook-events</code>.</p>
+      <h2>The mechanism: one log line in the agent's own context.</h2>
+      <p>The plugin's job is small and visible. When a tracked artifact's version has changed since this session last observed it, the <code>PreToolUse:Read</code> hook injects a single sentence into the agent's <code>additionalContext</code>: the path, the version it last saw, the version the workspace coordinator currently holds, and who last wrote it. The model reads that sentence in line with the read it's about to perform.</p>
+      <p>One of two things happens next, and both appear in the session transcript:</p>
+      <ul class="mechanism-outcomes">
+        <li><strong>The agent acknowledges and re-reads.</strong> The next <code>Read</code> tool call fetches current content. The agent's response references the divergence explicitly. The user sees the trace.</li>
+        <li><strong>The agent doesn't acknowledge.</strong> The warning was emitted; the model chose not to act on it. That choice is in the transcript too — discoverable on review, attributable to the model, not silent.</li>
+      </ul>
+      <p style="margin-top: 18px;">Tracked artifacts include <code>CLAUDE.md</code>, <code>plan.md</code>, <code>spec.md</code>, <code>runbook.md</code>, <code>DECISIONS.md</code>. The same mechanism applies to anything important loaded at the session-start boundary — skill instructions, slash-command prompts, project rules. The visible case is <code>CLAUDE.md</code>; every plugin that loads instructions at the boundary that compaction crosses inherits the same shape.</p>
     </div>
   </section>
 
@@ -522,48 +568,110 @@
     </div>
   </section>
 
-  <section id="invariant">
+  <section id="install">
     <div class="container">
-      <h2>The coordination invariant.</h2>
-      <p>Six issues on the public Claude Code tracker, over three months, across two surfaces, share one underlying shape: <strong>the runtime emits coordination signals that don't reflect actual state.</strong> A capability or piece of state appears honored; the runtime can't honor it; the LLM completes the call as text rather than the system surfacing a hard failure.</p>
+      <h2>Install.</h2>
+      <p>Two steps. The Python coordinator + hook client comes from PyPI; the Claude Code plugin metadata and hook wiring come from the marketplace.</p>
 
-      <aside class="invariant">
-        <h3>Three places the same shape shows up.</h3>
-        <p><strong>Rules-as-prose layer.</strong> <code>CLAUDE.md</code> isn't in context after compaction; subagents don't inherit it on spawn. The instruction looks present from the outside; the runtime can't surface it.</p>
-        <p><strong>ACK layer.</strong> A notification fires before the underlying process terminates; a claim doesn't wait for readiness. The completion signal looks delivered; the system isn't actually in the state it claims.</p>
-        <p><strong>Artifact-state layer.</strong> One session's view of a shared file doesn't reflect another session's update. The read looks current; the bytes the agent's reasoning is based on are stale.</p>
-      </aside>
+      <pre style="background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; overflow-x: auto; font-size: 0.875rem; line-height: 1.55; margin: 16px 0 16px;"><span style="color: var(--muted);"># Step 1 — Python coordinator + hook client (PyPI)</span>
+<span style="color: var(--muted);">❯</span> pip install <span style="color: var(--accent);">"agent-coherence>=0.8.0a1"</span>
 
-      <p>agent-coherence is the artifact-layer instance of this cross-cutting invariant: <em>signals about shared state must reflect actual state</em>. The plugin enforces "your session has seen artifact version V; the coordinator's current version is V+N from session B" — the same shape as "buffer the notification until the result actually lands" or "don't claim the rule is present when it isn't in context."</p>
+<span style="color: var(--muted);"># Step 2 — Claude Code plugin</span>
+<span style="color: var(--muted);">❯</span> claude plugin marketplace add hipvlady/agent-coherence-plugin
+<span style="color: var(--muted);">❯</span> claude plugin install agent-coherence@agent-coherence
 
-      <p>The runtime fixes for the other two layers are upstream — they're work Anthropic owns. The plugin doesn't compete with them. It sits at the layer those fixes don't reach: <strong>concurrent multi-session state coherence across worktrees and across mid-session artifact edits.</strong></p>
-    </div>
-  </section>
-
-  <section id="tam">
-    <div class="container">
-      <h2>It's not just <code>CLAUDE.md</code>.</h2>
-      <p>The same fragility applies to skill instructions and slash-command prompts loaded at session start. Anything important loaded at the session boundary — which is to say, anything loaded at a boundary that compaction crosses — has the same shape. <code>CLAUDE.md</code> is the visible case; every plugin that loads instructions at session start (slash commands, skill prompts, project rules) inherits it.</p>
-      <p>If your team relies on prose-shaped context surviving across sessions, the artifact category extends well beyond plan files.</p>
-    </div>
-  </section>
-
-  <section id="how">
-    <div class="container">
-      <h2>How it ships.</h2>
-      <p>One-line marketplace install. The plugin wires <code>PreToolUse:Read</code> and <code>PreToolUse:Edit|Write</code> hooks into Claude Code's hook system; a small coordinator process runs in the background per workspace, tracking artifact versions across sessions. SQLite-backed for crash recovery and post-compaction rehydration; <code>permissions.deny</code>-aware so it doesn't double-warn on tools the config already blocks.</p>
-
-      <pre style="background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; overflow-x: auto; font-size: 0.875rem; line-height: 1.55; margin: 16px 0 24px;"><span style="color: var(--muted);">❯</span> claude plugin marketplace add hipvlady/agent-coherence-plugin
-<span style="color: var(--muted);">❯</span> claude plugin install agent-coherence
+<span style="color: var(--muted);"># Track an artifact and observe state</span>
 <span style="color: var(--muted);">❯</span> agent-coherence-track docs/plans/feature-x.md
-<span style="color: var(--muted);">❯</span> agent-coherence-status
-<span style="color: var(--muted);"># next claude session that reads a tracked file sees the warning</span>
-<span style="color: var(--muted);"># above when another session has touched it</span></pre>
+<span style="color: var(--muted);">❯</span> agent-coherence-status</pre>
 
-      <p>Install measured at 27 seconds end-to-end (claude v2.1.131) on the alpha install, with the agent-coherence library on PyPI as the gating dependency.</p>
+      <div class="install-cta-row">
+        <button class="copy-btn" data-copy='pip install "agent-coherence>=0.8.0a1" && claude plugin marketplace add hipvlady/agent-coherence-plugin && claude plugin install agent-coherence@agent-coherence'>Copy both install steps</button>
+      </div>
+
+      <p style="margin-top: 16px; font-size: 0.92rem;">After install, the plugin wires <code>PreToolUse:Read</code> + <code>PreToolUse:Edit|Write</code> hooks into Claude Code's hook system. A small per-workspace coordinator process tracks artifact versions across sessions, SQLite-backed for crash recovery and post-compaction rehydration. <code>permissions.deny</code>-aware — doesn't double-warn on tools the config already blocks.</p>
+    </div>
+  </section>
+
+  <section id="scenes">
+    <div class="container">
+      <h2>What it looks like in a session.</h2>
+      <p>Four scenes from a real claude run, captured as static screenshots. The warning text in scene 3 is the output of the plugin's <code>PreToolUse:Read</code> hook — verbatim from the library's actual code path that fires when the coordinator detects a stale view.</p>
+
+      <article class="scene-card scene-context">
+        <header>
+          <p class="scene-num">1</p>
+          <div>
+            <h3>Two sessions, one plan.</h3>
+            <p class="scene-meta">Session A read <code>docs/plans/feature-x.md</code> 30 minutes ago. Session B just updated it. The plan describes a multi-step deploy that just changed.</p>
+          </div>
+        </header>
+        <img class="scene-shot" src="stale-read-scene-1.png" alt="Terminal screenshot showing the cat command output of docs/plans/feature-x.md — the file contains a numbered list of five deployment steps including a database migration, API endpoint, tests, feature flag wiring, and a 10 percent to 100 percent rollout cohort over one week. The header marks it as v4 updated 2026-05." loading="lazy" />
+      </article>
+
+      <article class="scene-card scene-context">
+        <header>
+          <p class="scene-num">2</p>
+          <div>
+            <h3>Session A is asked to read it.</h3>
+            <p class="scene-meta">A <code>claude</code> invocation with <code>--include-hook-events --output-format stream-json</code> shows the hook events firing in line with the model's tool calls. The plugin's <code>SessionStart</code> hook reports the coordinator is ready; the assistant chooses the <code>Read</code> tool.</p>
+          </div>
+        </header>
+        <img class="scene-shot" src="stale-read-scene-2.png" alt="Terminal screenshot of the claude command invocation with hook-events and stream-json flags, followed by the init event, the SessionStart hook event reporting coordinator ready on port 50311, and the assistant's tool_use message naming Read with file_path docs/plans/feature-x.md." loading="lazy" />
+      </article>
+
+      <article class="scene-card scene-pivot">
+        <header>
+          <p class="scene-num">3</p>
+          <div>
+            <h3>The plugin intercepts — the stale-read warning is injected.</h3>
+            <p class="scene-meta">Before the <code>Read</code> tool call executes, the plugin's <code>PreToolUse:Read</code> hook fires. <code>additionalContext</code> arrives in the agent's working memory: this file was updated by another session, your view is stale, here's the current version, consider re-reading. <strong>The load-bearing visual.</strong></p>
+          </div>
+        </header>
+        <img class="scene-shot" src="stale-read-scene-3.png" alt="Terminal screenshot of the PreToolUse Read hook event firing with decision allow. The additionalContext field contains a multi-line stale-read warning marked with a warning emoji: it states the file was updated by session a3f1c2b0, that the current version is v3, that this is the first time the session has observed this artifact because another session in the workspace registered it first, that the worktree content matches the last-recorded hash so the divergence is purely about version-tracking metadata, and recommends re-reading the file before acting on stale assumptions." loading="lazy" />
+      </article>
+
+      <article class="scene-card scene-resolve">
+        <header>
+          <p class="scene-num">4</p>
+          <div>
+            <h3>The assistant acknowledges before acting.</h3>
+            <p class="scene-meta">With the warning in context, the model notes the divergence in its response instead of operating on a stale plan. <code>agent-coherence-status</code> confirms the coordinator's view of the artifact: v3, written by another session two minutes ago, no prior view from this session.</p>
+          </div>
+        </header>
+        <img class="scene-shot" src="stale-read-scene-4.png" alt="Terminal screenshot of the assistant's message acknowledging the coordinator flagged the file as updated by another session and that it is treating its view as potentially stale, followed by the agent-coherence-status command output reporting one tracked artifact docs/plans/feature-x.md at version 3 with last writer a3f1c2b0 from two minutes ago and no prior view from this session, plus the coordinator process information." loading="lazy" />
+      </article>
+    </div>
+  </section>
+
+  <section id="verification">
+    <div class="container">
+      <h2>Verification outside the agent loop.</h2>
+      <p>Sub-agent <code>completed</code> is a control-flow signal, not a semantic one. When a sub-agent returns claiming "I wrote file X," the runtime knows it returned — it doesn't know whether the write happened, or whether the content is what the parent expected.</p>
+      <p>The plugin's coordinator gives you a second source. After a sub-agent returns, the workspace coordinator either saw a <code>PostToolUse</code> Edit event on the claimed file from that session — or it didn't. <code>agent-coherence-status</code> surfaces the coordinator's view independent of any prose in the agent's final message. One primitive of the many a "completion with verification" pattern would need; queryable by any orchestrator before it accepts the sub-agent's claim and moves on.</p>
+    </div>
+  </section>
+
+  <section id="what-not">
+    <div class="container">
+      <h2>What the plugin doesn't do.</h2>
+      <p>Claiming less than the plugin does is the cheaper credibility trade.</p>
+      <ul class="not-list">
+        <li><strong>v0.1 is warn-only.</strong> The plugin surfaces drift via <code>additionalContext</code>. It does not block tool calls. Strict mode (<code>permissionDecision: "deny"</code>) is deferred to v0.2 pending a falsifiability experiment on Claude Code's retry-loop behavior — the rest of this section assumes warn-only.</li>
+        <li><strong>It doesn't fix model-internal compaction drift.</strong> When the model decides which prior context to retain across a compaction boundary, the plugin has no influence — that's an inference-layer decision. The plugin operates on the workspace artifact, not on what the model remembered about it.</li>
+        <li><strong>It doesn't fix inference-layer corruption.</strong> If the model produces incorrect output despite having current artifact content in context, that's a model-quality problem, not a coherence problem.</li>
+        <li><strong>It doesn't fix sandbox or permissions gaps.</strong> Tool-class restrictions belong in <code>permissions.deny</code>; the plugin tracks the prose residue that survives config-ification.</li>
+      </ul>
+      <p>The plugin addresses the cross-session and cross-subagent artifact-coherence layer — one piece of the structural pattern Anthropic has explicitly chosen to leave to userspace. <em>"For deterministic behavior, your best bet is to use hooks."</em> Hooks are what the plugin uses.</p>
+    </div>
+  </section>
+
+  <section id="status">
+    <div class="container">
+      <h2>Status &amp; distribution.</h2>
+      <p><strong>v0.1 private alpha · launch-gate verified on claude v2.1.131.</strong> The re-read behavior across consecutive validation runs hits the gate the v0.1 plan sets; the alpha cohort is being assembled by hand-pick rather than open sign-up. v0.1.1 ships to the public marketplace on a four-week timeline once the alpha cohort returns a clean signal.</p>
 
       <p style="margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.96rem;">
-        Not using Claude Code? The same coherence machinery is a Python library you can call directly from <strong style="color: var(--text);">LangGraph, CrewAI, AutoGen, or custom orchestrators</strong> — same MESI protocol, different surface. The library demo runs a planner-executor refactor across three variants with real <code>tsc</code> verification. <a href="/code/" data-cta-target="code-page" data-cta-location="how-footer" style="color: var(--accent); border-bottom: 1px dotted var(--accent-dim); text-decoration: none;">See the library demo →</a>
+        Not using Claude Code? The same coherence machinery is a Python library you can call directly from <strong style="color: var(--text);">LangGraph, CrewAI, AutoGen, or custom orchestrators</strong> — same MESI protocol, different surface. The library demo runs a planner-executor refactor across three variants with real <code>tsc</code> verification. <a href="/code/" data-cta-target="code-page" data-cta-location="status-footer" style="color: var(--accent); border-bottom: 1px dotted var(--accent-dim); text-decoration: none;">See the library demo →</a>
       </p>
     </div>
   </section>
