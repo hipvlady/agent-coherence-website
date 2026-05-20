@@ -29,10 +29,39 @@ The two fixes don't compete. Moving config-able rules to `permissions.deny` is h
 
 ## The plugin — what it does
 
+Aligns with Anthropic's published guidance for project-rule enforcement in Claude Code (Aug 2025, restated 2026): *"For deterministic behavior, your best bet is to use hooks."* The plugin is the hook implementation that closes the artifact-coherence gap.
+
 - **Wires `PreToolUse:Read` and `PreToolUse:Edit|Write` hooks** into Claude Code's hook system. On every `Read` of a tracked file, the hook checks coordinator state and injects an `additionalContext` warning if the artifact has been updated by another session.
 - **Per-workspace SQLite-backed coordinator.** Survives compaction. Survives crash. Re-hydrates on next session start.
 - **`permissions.deny`-aware.** Doesn't double-warn on tools the config already blocks.
-- **One-line install.** `claude plugin marketplace add hipvlady/agent-coherence-plugin` — measured at 27 seconds end-to-end on the alpha install with the library pre-installed.
+
+## The mechanism — one log line in the agent's own context
+
+When a tracked artifact's version has changed since this session last observed it, the `PreToolUse:Read` hook injects a single sentence into the agent's `additionalContext`: the path, the version this session last saw, the version the workspace coordinator currently holds, and who last wrote it. The model reads that sentence in line with the read it's about to perform.
+
+One of two outcomes follows, and both appear in the session transcript:
+
+- **The agent acknowledges and re-reads.** The next `Read` tool call fetches current content. The agent's response references the divergence explicitly. The user sees the trace.
+- **The agent doesn't acknowledge.** The warning was emitted; the model chose not to act on it. That choice is in the transcript too — discoverable on review, attributable to the model, not silent.
+
+The mechanism applies to anything important loaded at the session-start boundary — `CLAUDE.md`, `plan.md`, `spec.md`, `runbook.md`, `DECISIONS.md`, skill instructions, slash-command prompts, project rules. Anything loaded at a boundary that compaction crosses inherits the same shape.
+
+## Verification outside the agent loop
+
+Sub-agent `completed` is a control-flow signal, not a semantic one. When a sub-agent returns claiming "I wrote file X," the runtime knows it returned — it doesn't know whether the write happened, or whether the content is what the parent expected.
+
+The plugin's coordinator gives you a second source. After a sub-agent returns, the workspace coordinator either saw a `PostToolUse:Edit` event on the claimed file from that session — or it didn't. `agent-coherence-status` surfaces the coordinator's view independent of any prose in the agent's final message. One primitive of the many a "completion with verification" pattern would need; queryable by any orchestrator before it accepts the sub-agent's claim and moves on.
+
+## What the plugin doesn't do
+
+Claiming less than the plugin does is the cheaper credibility trade.
+
+- **v0.1 is warn-only.** The plugin surfaces drift via `additionalContext`. It does not block tool calls. Strict mode (`permissionDecision: "deny"`) is deferred to v0.2 pending a falsifiability experiment on Claude Code's retry-loop behavior.
+- **It doesn't fix model-internal compaction drift.** When the model decides which prior context to retain across a compaction boundary, the plugin has no influence — that's an inference-layer decision.
+- **It doesn't fix inference-layer corruption.** If the model produces incorrect output despite having current artifact content in context, that's a model-quality problem, not a coherence problem.
+- **It doesn't fix sandbox or permissions gaps.** Tool-class restrictions belong in `permissions.deny`; the plugin tracks the prose residue that survives config-ification.
+
+The plugin addresses the cross-session and cross-subagent artifact-coherence layer — one piece of the structural pattern Anthropic has explicitly chosen to leave to userspace.
 
 ## What the library fits in coding-agent workflows
 
@@ -107,14 +136,22 @@ pip install "agent-coherence[crewai]"
 pip install "agent-coherence[autogen]"
 ```
 
-**Plugin** (Claude Code):
+**Plugin** (Claude Code). Two steps — the Python coordinator + hook client come from PyPI; the Claude Code plugin metadata and hook wiring come from the marketplace:
 
 ```
-pip install agent-coherence
+# Step 1 — Python coordinator + hook client (PyPI 0.8.0a1)
+pip install "agent-coherence>=0.8.0a1"
+
+# Step 2 — Claude Code plugin
 claude plugin marketplace add hipvlady/agent-coherence-plugin
-claude plugin install agent-coherence
+claude plugin install agent-coherence@agent-coherence
+
+# Track an artifact and observe state
 agent-coherence-track docs/plans/feature-x.md
+agent-coherence-status
 ```
+
+**Status:** v0.1 private alpha · launch-gate verified on claude v2.1.131. The re-read behavior across consecutive validation runs hits the gate the v0.1 plan sets; the alpha cohort is being assembled by hand-pick rather than open sign-up. v0.1.1 ships to the public marketplace on a four-week timeline once the alpha cohort returns a clean signal.
 
 ## LangGraph drop-in (library)
 
