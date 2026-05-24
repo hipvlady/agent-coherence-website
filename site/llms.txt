@@ -31,7 +31,8 @@ The two fixes don't compete. Moving config-able rules to `permissions.deny` is h
 
 Aligns with Anthropic's published guidance for project-rule enforcement in Claude Code (Aug 2025, restated 2026): *"For deterministic behavior, your best bet is to use hooks."* The plugin is the hook implementation that closes the artifact-coherence gap.
 
-- **Wires `PreToolUse:Read` and `PreToolUse:Edit|Write` hooks** into Claude Code's hook system. On every `Read` of a tracked file, the hook checks coordinator state and injects an `additionalContext` warning if the artifact has been updated by another session.
+- **Wires `PreToolUse` hooks across five tool surfaces** — `Read`, `Edit`/`Write` (shared matcher), `Bash` (file-path-aware via the `bash_path_detector`), and `Grep`. Five-handler coverage exists because a single-handler `Read`-only version is bypassable: when a Read warning fires, the model can retry 2–5 times then route around via `bash cat plan.md`, and without Bash + Grep coverage that bypass is silent. The wider surface is correctness for warn mode and a security floor for strict mode (v0.2).
+- **On every covered tool call against a tracked artifact** the hook checks coordinator state. Warn mode (v0.1.1, default) injects the `additionalContext` warning. Strict mode (v0.2, per-artifact opt-in) returns `permissionDecision: "deny"` with byte-identical text on every retry.
 - **Per-workspace SQLite-backed coordinator.** Survives compaction. Survives crash. Re-hydrates on next session start.
 - **`permissions.deny`-aware.** Doesn't double-warn on tools the config already blocks.
 
@@ -56,7 +57,7 @@ The plugin's coordinator gives you a second source. After a sub-agent returns, t
 
 Claiming less than the plugin does is the cheaper credibility trade.
 
-- **v0.1 is warn-only.** The plugin surfaces drift via `additionalContext`. It does not block tool calls. Strict mode (`permissionDecision: "deny"`) is deferred to v0.2 pending a falsifiability experiment on Claude Code's retry-loop behavior.
+- **v0.1.1 is warn-only by default. v0.2 adds per-artifact strict-mode opt-in.** The plugin surfaces drift via `additionalContext` (warn mode, default; preserved byte-identical in v0.2 for any artifact not listed in `strict_mode.yaml`). Strict mode opts a tracked artifact into `permissionDecision: "deny"` on stale-read attempts — operator-controlled per-artifact via `.coherence/strict_mode.yaml`, never global. The Phase 0 falsifiability experiment (2026-05-19) confirmed the routing-around-Read mechanism that motivated the five-handler surface, and falsified the original "varied deny text bounds model retries" hypothesis — Opus reads varied text as prompt-injection patterns and retries more, not fewer. v0.2 deny text is therefore static and byte-identical across retries.
 - **It doesn't fix model-internal compaction drift.** When the model decides which prior context to retain across a compaction boundary, the plugin has no influence — that's an inference-layer decision.
 - **It doesn't fix inference-layer corruption.** If the model produces incorrect output despite having current artifact content in context, that's a model-quality problem, not a coherence problem.
 - **It doesn't fix sandbox or permissions gaps.** Tool-class restrictions belong in `permissions.deny`; the plugin tracks the prose residue that survives config-ification.
@@ -139,8 +140,11 @@ pip install "agent-coherence[autogen]"
 **Plugin** (Claude Code). Two steps — the Python coordinator + hook client come from PyPI; the Claude Code plugin metadata and hook wiring come from the marketplace:
 
 ```
-# Step 1 — Python coordinator + hook client (PyPI 0.8.0a1)
-pip install "agent-coherence>=0.8.0a1"
+# Step 1 — Python coordinator + hook client (PyPI stable; the 0.8.0a1
+#   pre-release alias is no longer needed since v0.8.0 stable shipped
+#   2026-05-23). Warn mode works against v0.8.0+; strict mode (v0.2)
+#   requires v0.9.0 once published.
+pip install "agent-coherence>=0.8.0"
 
 # Step 2 — Claude Code plugin
 claude plugin marketplace add hipvlady/agent-coherence-plugin
@@ -151,7 +155,7 @@ agent-coherence-track docs/plans/feature-x.md
 agent-coherence-status
 ```
 
-**Status:** v0.1 private alpha · launch-gate verified on claude v2.1.131. The re-read behavior across consecutive validation runs hits the gate the v0.1 plan sets; the alpha cohort is being assembled by hand-pick rather than open sign-up. v0.1.1 ships to the public marketplace on a four-week timeline once the alpha cohort returns a clean signal.
+**Status:** v0.1.1 shipped to the public marketplace 2026-05-23 against the launch-gate baseline (N=80 trials, 100% re-read-or-acknowledged, 0 ignored, on claude v2.1.131 with the haiku model). v0.2 is fully coded on `dev` of both repos — per-artifact strict-mode opt-in via `.coherence/strict_mode.yaml`, a `TERMINAL_DENIAL_CLASSES` structural security invariant, the `agent-coherence-migrate-deny` stricter migration helper, strict-mode telemetry plus a denial-only `.coherence/audit.log`, and a cross-implementation protocol corpus. The remaining operator-driven gates are the broad-beta tag push (`v0.2.0`) and the 14-day post-launch monitoring window per the BB1–BB8 rubric documented at `agent-coherence-plugin/docs/BROAD_BETA.md`.
 
 ## LangGraph drop-in (library)
 
@@ -251,7 +255,7 @@ The same fragility applies to skill instructions and slash-command prompts loade
 ## Production safety
 
 - **License:** Apache-2.0, public on GitHub. Both the library and the plugin.
-- **Tests (library):** 165 unit + integration tests.
+- **Tests (library):** ~1,290 unit + integration tests. Plus an opt-in launch-gate (N=40 live-claude scenarios × multi-model matrix in v0.2) and a cross-implementation protocol corpus that catches Python ↔ Node coordinator wire-shape drift across 31 scenarios with strict-mode + warn-mode coverage.
 - **Formal verification:** Protocol safety properties (single-writer, monotonic versioning, no torn reads) model-checked with TLA+/TLC in CI.
 - **Supply chain:** PyPI Trusted Publishers (OIDC), PEP 740 attestations, CycloneDX SBOM published with every release.
 - **Crash recovery:** Optional sweep reclaims stale grants when agents OOM-kill or livelock (heartbeat-based, opt-in via `CrashRecoveryConfig`). The plugin's SQLite coordinator rehydrates after idle-shutdown.
@@ -262,12 +266,18 @@ The same fragility applies to skill instructions and slash-command prompts loade
 - **Library source:** https://github.com/hipvlady/agent-coherence
 - **Library PyPI:** https://pypi.org/project/agent-coherence/
 - **Plugin source:** https://github.com/hipvlady/agent-coherence-plugin
+- **Plugin CHANGELOG:** https://github.com/hipvlady/agent-coherence-plugin/blob/main/CHANGELOG.md
+- **Plugin broad-beta playbook:** https://github.com/hipvlady/agent-coherence-plugin/blob/main/docs/BROAD_BETA.md
+- **Plugin contributing guide:** https://github.com/hipvlady/agent-coherence-plugin/blob/main/CONTRIBUTING.md
+- **Plugin privacy statement:** https://github.com/hipvlady/agent-coherence-plugin/blob/main/PRIVACY.md
 - **Paper:** https://arxiv.org/abs/2603.15183
 - **Home:** https://agent-coherence.dev
 - **Library landing page:** https://agent-coherence.dev/code/
 - **Plugin landing page:** https://agent-coherence.dev/plugin/
-- **Discussions:** https://github.com/hipvlady/agent-coherence/discussions
+- **Library discussions:** https://github.com/hipvlady/agent-coherence/discussions
+- **Plugin discussions:** https://github.com/hipvlady/agent-coherence-plugin/discussions
 - **Contact:** contact@agent-coherence.dev
+- **Security:** security@agent-coherence.dev (72h response SLA) or https://github.com/hipvlady/agent-coherence-plugin/security
 - **15-min call:** https://cal.com/agent-coherence
 - **LinkedIn:** https://www.linkedin.com/company/agent-coherence/
 
