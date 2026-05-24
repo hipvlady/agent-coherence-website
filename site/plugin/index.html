@@ -472,12 +472,9 @@
     <div class="container">
       <a class="brand" href="/" aria-label="agent-coherence home">
         <svg class="brand-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="6" cy="7" r="2.6" stroke="currentColor" stroke-width="1.6"/>
-          <circle cx="18" cy="7" r="2.6" stroke="currentColor" stroke-width="1.6"/>
-          <circle cx="12" cy="18" r="2.6" fill="currentColor" stroke="currentColor" stroke-width="1.6"/>
-          <line x1="8.6" y1="7" x2="15.4" y2="7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          <line x1="7.3" y1="9.2" x2="11" y2="15.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          <line x1="16.7" y1="9.2" x2="13" y2="15.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="7" cy="12" r="3.6" fill="currentColor"/>
+          <circle cx="17" cy="12" r="3.6" stroke="currentColor" stroke-width="1.8"/>
+          <line x1="10.6" y1="12" x2="13.4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
         <span>agent-coherence<span class="dot">.</span></span>
       </a>
@@ -574,7 +571,7 @@
       <p>Two steps. The Python coordinator + hook client comes from PyPI; the Claude Code plugin metadata and hook wiring come from the marketplace.</p>
 
       <pre style="background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; overflow-x: auto; font-size: 0.875rem; line-height: 1.55; margin: 16px 0 16px;"><span style="color: var(--muted);"># Step 1 — Python coordinator + hook client (PyPI)</span>
-<span style="color: var(--muted);">❯</span> pip install <span style="color: var(--accent);">"agent-coherence>=0.9.0"</span>
+<span style="color: var(--muted);">❯</span> pip install <span style="color: var(--accent);">"agent-coherence>=0.8.0"</span>
 
 <span style="color: var(--muted);"># Step 2 — Claude Code plugin</span>
 <span style="color: var(--muted);">❯</span> claude plugin marketplace add hipvlady/agent-coherence-plugin
@@ -585,7 +582,7 @@
 <span style="color: var(--muted);">❯</span> agent-coherence-status</pre>
 
       <div class="install-cta-row">
-        <button class="copy-btn" data-copy='pip install "agent-coherence>=0.9.0" && claude plugin marketplace add hipvlady/agent-coherence-plugin && claude plugin install agent-coherence@agent-coherence'>Copy both install steps</button>
+        <button class="copy-btn" data-copy='pip install "agent-coherence>=0.8.0" && claude plugin marketplace add hipvlady/agent-coherence-plugin && claude plugin install agent-coherence@agent-coherence'>Copy both install steps</button>
       </div>
 
       <p style="margin-top: 16px; font-size: 0.92rem;">After install, the plugin wires <code>PreToolUse:Read</code> + <code>PreToolUse:Edit|Write</code> hooks into Claude Code's hook system. A small per-workspace coordinator process tracks artifact versions across sessions, SQLite-backed for crash recovery and post-compaction rehydration. <code>permissions.deny</code>-aware — doesn't double-warn on tools the config already blocks.</p>
