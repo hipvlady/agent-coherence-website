@@ -64,6 +64,17 @@ Claiming less than the plugin does is the cheaper credibility trade.
 
 The plugin addresses the cross-session and cross-subagent artifact-coherence layer — one piece of the structural pattern Anthropic has explicitly chosen to leave to userspace.
 
+## What v0.2.0 added on top of v0.1.1
+
+Tagged 2026-05-24; broad-beta open on the public marketplace; 14-day BB1–BB8 monitoring window in progress.
+
+- **Per-artifact strict-mode opt-in** via `.coherence/strict_mode.yaml` — same shape as `tracked.yaml` and `ignored.yaml`. Intersection semantics with `tracked_paths`: an artifact must be tracked AND listed to enter strict mode. Startup footgun guard fires a warning if the strict-mode glob matches more than 50 tracked artifacts (default threshold).
+- **`TERMINAL_DENIAL_CLASSES` structural security invariant.** Module-level frozenset enumerating denial classes that must never convert to `permissionDecision: "allow"`. All six allow-emission call sites route through `emit_allow()`, which refuses the conversion; an AST-based meta-test forces parameter-list extension on every new allow path so future contributors can't silently regress the boundary.
+- **`agent-coherence-migrate-deny`** — a stricter sibling to v0.1.1's `agent-coherence-migrate-rules`. STDOUT-only (never writes `settings.json`), symlink-contained (canonical-path containment check refuses `CLAUDE.md` / `AGENTS.md` whose realpath escapes the workspace root), never invokes an LLM, under-emit bias (only canonical phrasings trigger). For security-sensitive operators.
+- **Strict-mode telemetry.** Three counters in `/status?detail=metrics`: `strict_mode_denials_total`, `strict_mode_routed_around_via_bash_total` (30-second window detecting the Phase 0 H4 routing pattern), `audit_log_mode_drift_total`. Plus a minimal denial-only `.coherence/audit.log` in JSONL at mode 0o600 — no command bodies, no user content. Full callback surface deferred to a v0.2.x point release.
+- **Cross-implementation protocol corpus.** `tests/protocol_corpus/` in the library repo, 12 warn-mode + 8 strict-mode fixtures parametrized over (fixture × backend). Catches Python ↔ Node coordinator wire-shape drift before it ships. Strict-mode fixtures are Python-only in v0.2 (the Node coordinator stays warn-mode; v0.3 brings strict mode to Node via the multi-target converter plan).
+- **Broad-beta launch package.** README depth-parity overhaul (149 → 335 lines), `docs/BROAD_BETA.md` (BB1–BB8 rubric + 14-day monitoring window + rollback runbook), `CHANGELOG.md`, hardened public-feedback intake (three issue templates + four Discussion templates + `CODE_OF_CONDUCT` + `CONTRIBUTING` + `PRIVACY` + the `security@agent-coherence.dev` alias closes the v0.1.1 `SECURITY.md` TODO).
+
 ## What the library fits in coding-agent workflows
 
 agent-coherence is the coherence layer for any setup where multiple agents share mutable artifacts:
@@ -155,7 +166,7 @@ agent-coherence-track docs/plans/feature-x.md
 agent-coherence-status
 ```
 
-**Status:** v0.1.1 shipped to the public marketplace 2026-05-23 against the launch-gate baseline (N=80 trials, 100% re-read-or-acknowledged, 0 ignored, on claude v2.1.131 with the haiku model). v0.2 is fully coded on `dev` of both repos — per-artifact strict-mode opt-in via `.coherence/strict_mode.yaml`, a `TERMINAL_DENIAL_CLASSES` structural security invariant, the `agent-coherence-migrate-deny` stricter migration helper, strict-mode telemetry plus a denial-only `.coherence/audit.log`, and a cross-implementation protocol corpus. The remaining operator-driven gates are the broad-beta tag push (`v0.2.0`) and the 14-day post-launch monitoring window per the BB1–BB8 rubric documented at `agent-coherence-plugin/docs/BROAD_BETA.md`.
+**Status:** v0.2.0 broad-beta tag pushed 2026-05-24 against the v0.1.1 marketplace-tested baseline (N=80 trials, 100% re-read-or-acknowledged, 0 ignored, on claude v2.1.131 with the haiku model). 14-day post-launch monitoring window in progress per the BB1–BB8 rubric documented at `agent-coherence-plugin/docs/BROAD_BETA.md`. v0.1.1 stays the recommended install for warn-mode-only deployments; v0.2.0 adds per-artifact strict-mode opt-in.
 
 ## LangGraph drop-in (library)
 
