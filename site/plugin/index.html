@@ -592,7 +592,7 @@
   <section id="scenes">
     <div class="container">
       <h2>What it looks like in a session.</h2>
-      <p>Four scenes from a real claude run, captured as static screenshots. The warning text in scene 3 is the output of the plugin's <code>PreToolUse:Read</code> hook — verbatim from the library's actual code path that fires when the coordinator detects a stale view.</p>
+      <p>Five scenes from a real claude run, captured as static screenshots. The hook output in scenes 3 and 4 is verbatim from the library's actual code paths. Scene 3 shows the warn-mode <code>additionalContext</code> advisory (default behavior, v0.1.1+); scene 4 shows the strict-mode <code>permissionDecision: "deny"</code> envelope (v0.2 headline feature, per-artifact opt-in via <code>.coherence/strict_mode.yaml</code>).</p>
 
       <article class="scene-card scene-context">
         <header>
@@ -620,22 +620,33 @@
         <header>
           <p class="scene-num">3</p>
           <div>
-            <h3>The plugin intercepts — the stale-read warning is injected.</h3>
-            <p class="scene-meta">Before the <code>Read</code> tool call executes, the plugin's <code>PreToolUse:Read</code> hook fires. <code>additionalContext</code> arrives in the agent's working memory: this file was updated by another session, your view is stale, here's the current version, consider re-reading. <strong>The load-bearing visual.</strong></p>
+            <h3>Warn mode — the stale-read advisory is injected.</h3>
+            <p class="scene-meta">Default behavior. Before the <code>Read</code> tool call executes, the plugin's <code>PreToolUse:Read</code> hook fires and an <code>additionalContext</code> sentence arrives in the agent's working memory: this file was updated by another session, your view is stale, here's the current version, consider re-reading. The call is allowed; the model gets to choose.</p>
           </div>
         </header>
         <img class="scene-shot" src="stale-read-scene-3.png" alt="Terminal screenshot of the PreToolUse Read hook event firing with decision allow. The additionalContext field contains a multi-line stale-read warning marked with a warning emoji: it states the file was updated by session a3f1c2b0, that the current version is v3, that this is the first time the session has observed this artifact because another session in the workspace registered it first, that the worktree content matches the last-recorded hash so the divergence is purely about version-tracking metadata, and recommends re-reading the file before acting on stale assumptions." loading="lazy" />
       </article>
 
-      <article class="scene-card scene-resolve">
+      <article class="scene-card scene-pivot">
         <header>
           <p class="scene-num">4</p>
           <div>
-            <h3>The assistant acknowledges before acting.</h3>
-            <p class="scene-meta">With the warning in context, the model notes the divergence in its response instead of operating on a stale plan. <code>agent-coherence-status</code> confirms the coordinator's view of the artifact: v3, written by another session two minutes ago, no prior view from this session.</p>
+            <h3>Strict mode — the same stale read returns <code>permissionDecision: "deny"</code>.</h3>
+            <p class="scene-meta">With the artifact opted into strict mode via <code>.coherence/strict_mode.yaml</code>, the same hook returns a hard denial instead of an advisory. The deny text is structural and byte-identical across retries (per the Phase 0 falsifiability finding — varied text reads as prompt-injection to Opus and worsens retries). The model surfaces the denial verbatim and stops rather than acting on stale content. Strict mode is per-artifact opt-in; warn mode above remains the default. <strong>The v0.2 headline feature.</strong></p>
           </div>
         </header>
-        <img class="scene-shot" src="stale-read-scene-4.png" alt="Terminal screenshot of the assistant's message acknowledging the coordinator flagged the file as updated by another session and that it is treating its view as potentially stale, followed by the agent-coherence-status command output reporting one tracked artifact docs/plans/feature-x.md at version 3 with last writer a3f1c2b0 from two minutes ago and no prior view from this session, plus the coordinator process information." loading="lazy" />
+        <img class="scene-shot" src="stale-read-scene-4.png" alt="Terminal screenshot of the PreToolUse Read hook event returning permissionDecision deny instead of allow. The hookSpecificOutput contains a permissionDecisionReason: Stale read denied — docs/plans/feature-x.md was updated by session a3f1c2b0 on 2026-05-25; re-read the file via the Read tool before proceeding; the denial is structural under v0.2 strict mode and retrying the same operation will produce the same denial." loading="lazy" />
+      </article>
+
+      <article class="scene-card scene-resolve">
+        <header>
+          <p class="scene-num">5</p>
+          <div>
+            <h3>The assistant acknowledges before acting.</h3>
+            <p class="scene-meta">In warn mode, the model notes the divergence in its response instead of operating on a stale plan; in strict mode, it surfaces the denial verbatim and halts. <code>agent-coherence-status</code> confirms the coordinator's view of the artifact: v3, written by another session two minutes ago, no prior view from this session.</p>
+          </div>
+        </header>
+        <img class="scene-shot" src="stale-read-scene-5.png" alt="Terminal screenshot of the assistant's message acknowledging the coordinator flagged the file as updated by another session and that it is treating its view as potentially stale, followed by the agent-coherence-status command output reporting one tracked artifact docs/plans/feature-x.md at version 3 with last writer a3f1c2b0 from two minutes ago and no prior view from this session, plus the coordinator process information." loading="lazy" />
       </article>
     </div>
   </section>

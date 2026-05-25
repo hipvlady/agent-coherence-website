@@ -65,6 +65,25 @@ printf '\033[1;33m   before acting on stale assumptions."}\033[0m\n'
 EOF
       ;;
     4)
+      # Strict-mode PreToolUse:Read deny envelope. v0.2 headline feature.
+      # Matches docs/demos/2026-05-25-strict-mode-deny-screenshot-script.md
+      # — same wire shape claude emits when a tracked path matches
+      # .coherence/strict_mode.yaml and the coordinator sees a stale view.
+      cat <<'EOF'
+TERM=xterm-256color
+printf '\033[1;31m{"type":"hook_event","hook":"PreToolUse:Read",\033[0m\n'
+printf '\033[1;31m "hookSpecificOutput":{\033[0m\n'
+printf '\033[1;31m   "hookEventName":"PreToolUse",\033[0m\n'
+printf '\033[1;31m   "permissionDecision":"deny",\033[0m\n'
+printf '\033[1;31m   "permissionDecisionReason":\033[0m\n'
+printf '\033[1;31m    "Stale read denied: docs/plans/feature-x.md was\033[0m\n'
+printf '\033[1;31m     updated by session a3f1c2b0 at 2026-05-25T14:02:11+00:00.\033[0m\n'
+printf '\033[1;31m     Re-read docs/plans/feature-x.md via the Read tool before\033[0m\n'
+printf '\033[1;31m     proceeding. This denial is structural (v0.2 strict mode);\033[0m\n'
+printf '\033[1;31m     retrying the same operation will produce the same denial."}}\033[0m\n'
+EOF
+      ;;
+    5)
       cat <<'EOF'
 TERM=xterm-256color
 printf '\033[2m{"type":"message","role":"assistant","content":"\033[0m\n'
@@ -86,7 +105,7 @@ EOF
 }
 
 # ─── Render each scene as a single-frame asciicast → still GIF ──────────────
-for n in 1 2 3 4; do
+for n in 1 2 3 4 5; do
   fixture_script="$SCRATCH/scene-$n.sh"
   scene_fixture "$n" > "$fixture_script"
   chmod +x "$fixture_script"
@@ -115,7 +134,8 @@ for n in 1 2 3 4; do
     1) HEIGHT=9 ;;    # prompt + 8-line plan
     2) HEIGHT=7 ;;    # claude invocation + 3 JSON events
     3) HEIGHT=12 ;;   # 11-line warning + opening brace
-    4) HEIGHT=11 ;;   # assistant content + blank + status output
+    4) HEIGHT=12 ;;   # 11-line deny envelope
+    5) HEIGHT=11 ;;   # assistant content + blank + status output
   esac
   python3 - "$cast" "$HEIGHT" <<'PYEOF'
 import json, sys
@@ -149,8 +169,11 @@ from PIL import Image, ImageDraw, ImageFont
 scratch = Path(sys.argv[1])
 out_dir = Path(sys.argv[2])
 
-# Open the 4 scene GIFs as PIL images (first frame).
-scenes = [Image.open(scratch / f"scene-{n}.gif").convert("RGB") for n in (1, 2, 3, 4)]
+# Open the 5 scene GIFs as PIL images (first frame).
+# Scenes 1-2 = context; scene 3 = warn-mode (PreToolUse:Read additionalContext);
+# scene 4 = strict-mode (PreToolUse:Read permissionDecision: deny — v0.2);
+# scene 5 = assistant acknowledges.
+scenes = [Image.open(scratch / f"scene-{n}.gif").convert("RGB") for n in (1, 2, 3, 4, 5)]
 
 # Save individual scene PNGs at their NATURAL height (no padding) — each
 # scene's height is already tuned via the cast header.height override in
@@ -161,8 +184,9 @@ for n, img in enumerate(scenes, start=1):
     img.save(fname, "PNG", optimize=True)
     print(f"  wrote {fname.name} ({fname.stat().st_size // 1024} KB) — {img.width}x{img.height}")
 
-# For the 2x2 combined montage, pad to uniform dimensions so the grid
-# looks balanced. Individual PNGs above stay at natural sizes.
+# 2x3 combined montage for surfaces that want a single-image view
+# (marketplace listing thumbnail, README embed). With 5 scenes we render
+# a 2-column × 3-row grid; the trailing 6th cell stays empty.
 max_w = max(s.width for s in scenes)
 max_h = max(s.height for s in scenes)
 BG = (10, 10, 10)
@@ -172,13 +196,13 @@ def pad(img):
     return canvas
 padded = [pad(s) for s in scenes]
 
-# Label strip per panel for the combined montage view.
 LABEL_H = 38
 LABELS = [
     "1 — the plan two sessions are sharing",
     "2 — claude is asked to read it",
-    "3 — the plugin intercepts: stale-read warning injected",
-    "4 — assistant acknowledges, status shows v3 by another session",
+    "3 — warn mode: stale-read warning injected (default)",
+    "4 — strict mode: permissionDecision: deny (v0.2, opt-in)",
+    "5 — assistant acknowledges, status shows v3 by another session",
 ]
 LABEL_COLOR = (94, 234, 212)
 LABEL_BG = (19, 20, 24)
@@ -205,23 +229,21 @@ def labeled(scene_img, text):
     panel.paste(scene_img, (0, LABEL_H))
     return panel
 
-labeled_scenes = [labeled(padded[i], LABELS[i]) for i in range(4)]
+labeled_scenes = [labeled(padded[i], LABELS[i]) for i in range(len(scenes))]
 
 gap = 14
 panel_w = max_w
 panel_h = LABEL_H + max_h
-total_w = panel_w * 2 + gap * 3
-total_h = panel_h * 2 + gap * 3
+cols, rows = 2, 3
+total_w = panel_w * cols + gap * (cols + 1)
+total_h = panel_h * rows + gap * (rows + 1)
 
 montage = Image.new("RGB", (total_w, total_h), BG)
-positions = [
-    (gap, gap),
-    (gap * 2 + panel_w, gap),
-    (gap, gap * 2 + panel_h),
-    (gap * 2 + panel_w, gap * 2 + panel_h),
-]
-for img, pos in zip(labeled_scenes, positions):
-    montage.paste(img, pos)
+for i, img in enumerate(labeled_scenes):
+    col, row = i % cols, i // cols
+    x = gap + col * (panel_w + gap)
+    y = gap + row * (panel_h + gap)
+    montage.paste(img, (x, y))
 
 montage_path = out_dir / "stale-read-montage.png"
 montage.save(montage_path, "PNG", optimize=True)
