@@ -46,6 +46,69 @@ jobs:
           grep -c "dateModified" site/index.html
           grep "<lastmod>" site/sitemap.xml
 
+      - name: Inject current library + plugin versions into hero badges
+        env:
+          # GitHub API call is unauthenticated; this raises the rate-limit
+          # ceiling from 60/h to 1000/h for this runner without granting
+          # write scope.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # Strict allowlist for what we'll accept as a version. Covers the
+          # PyPI / PEP 440 shapes (1.2.3, 1.2.3a1, 1.2.3.dev1, 1.2.3.post1)
+          # and the SemVer shapes the plugin uses. Anything else (including
+          # injected shell metacharacters from a compromised upstream API
+          # response) gets rejected before reaching sed.
+          is_valid_version() {
+            local v="$1"
+            [[ "$v" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?([.-]?(a|b|rc|alpha|beta|dev|post)[0-9]*)?$ ]]
+          }
+
+          # ─── Library version from PyPI ───────────────────────────────
+          # Captured as a variable so the API response can't reach sed or
+          # echo without passing the regex check first.
+          LIB_RAW=$(curl --fail --silent --show-error --max-time 15 \
+            https://pypi.org/pypi/agent-coherence/json | jq -r '.info.version' || echo "")
+          if [ -z "$LIB_RAW" ] || [ "$LIB_RAW" = "null" ]; then
+            echo "WARN: PyPI lookup returned empty; keeping existing library version in HTML"
+          elif ! is_valid_version "$LIB_RAW"; then
+            printf 'WARN: PyPI returned unexpected version shape (%q); keeping existing\n' "$LIB_RAW"
+          else
+            LIB_VERSION="$LIB_RAW"
+            printf 'library version -> %s\n' "$LIB_VERSION"
+            # / and /code/ share the same library badge
+            for page in site/index.html site/code/index.html; do
+              sed -i "s|<span class=\"ver\">[^<]*</span>|<span class=\"ver\">${LIB_VERSION}</span>|g" "$page"
+            done
+          fi
+
+          # ─── Plugin version from GitHub releases ─────────────────────
+          PLUGIN_TAG_RAW=$(curl --fail --silent --show-error --max-time 15 \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/hipvlady/agent-coherence-plugin/releases/latest \
+            | jq -r '.tag_name' || echo "")
+          # Strip a leading 'v' if present so the badge shape stays
+          # 'v<span class="ver">0.2.0</span> · ...'
+          PLUGIN_RAW="${PLUGIN_TAG_RAW#v}"
+          if [ -z "$PLUGIN_RAW" ] || [ "$PLUGIN_RAW" = "null" ]; then
+            echo "WARN: GitHub releases lookup returned empty; keeping existing plugin version in HTML"
+          elif ! is_valid_version "$PLUGIN_RAW"; then
+            printf 'WARN: GitHub returned unexpected tag shape (%q); keeping existing\n' "$PLUGIN_RAW"
+          else
+            PLUGIN_VERSION="$PLUGIN_RAW"
+            printf 'plugin version -> %s\n' "$PLUGIN_VERSION"
+            sed -i "s|<span class=\"ver\">[^<]*</span>|<span class=\"ver\">${PLUGIN_VERSION}</span>|g" site/plugin/index.html
+          fi
+
+          echo "─── post-injection badge state ───"
+          for page in site/index.html site/code/index.html site/plugin/index.html; do
+            printf '  %s: ' "$page"
+            grep -oE '<span class="ver">[^<]+</span>' "$page" | head -1
+          done
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
