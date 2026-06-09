@@ -58,7 +58,7 @@
         "@id": "https://agent-coherence.dev/#website",
         "url": "https://agent-coherence.dev/",
         "name": "agent-coherence",
-        "description": "Detect stale reads in multi-agent LLM systems. Serve the current version on the next read instead of rebroadcasting.",
+        "description": "Prevent silent data-loss from stale-read→write lost updates in multi-agent LLM systems. Enforce single-writer ordering on a single host (sequential and concurrent writers); serve the current version on the next read.",
         "inLanguage": "en-US",
         "datePublished": "2026-05-11T00:00:00+00:00",
         "dateModified": "2026-05-12T00:00:00+00:00",
@@ -80,7 +80,7 @@
         "@id": "https://agent-coherence.dev/#software",
         "name": "agent-coherence",
         "alternateName": "ccs",
-        "description": "Detects stale reads in multi-agent LLM systems and serves the current version on the next read instead of rebroadcasting. MESI-style cache coherence across LangGraph, CrewAI, AutoGen, and custom orchestrators. Vendor-neutral across Anthropic, OpenAI, Google, Mistral, and open-source models.",
+        "description": "Prevents silent data-loss from stale-read→write lost updates in multi-agent LLM systems (single host today; cross-host on the roadmap); serves the current version on the next read. MESI-style cache coherence across LangGraph, CrewAI, AutoGen, and custom orchestrators. Vendor-neutral across Anthropic, OpenAI, Google, Mistral, and open-source models.",
         "url": "https://agent-coherence.dev",
         "codeRepository": "https://github.com/hipvlady/agent-coherence",
         "programmingLanguage": ["Python"],
@@ -146,7 +146,7 @@
             "name": "What happens when two agents try to write to the same artifact?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "The protocol enforces single-writer exclusivity. Only one agent holds write permission at a time; concurrent writes are prevented at the protocol level, not 'resolved' by an append-only reducer that produces duplicates or unexpected list nesting. For workloads where concurrent writes are semantically composable, CRDTs are the right tool — see the Why Coherence Matters doc for the layered model."
+              "text": "The protocol enforces single-writer ordering. One agent reads, a peer commits a newer version, the first then writes — the stale writer is denied (its cache went INVALID) and must re-read, so the lost update is prevented, not silently applied. On a single host this holds for both sequential and concurrent writers: the concurrent same-key race is resolved by an optimistic commit-CAS plus fencing — the loser gets a typed conflict and retries, never a silent drop. Coordinating writers across multiple hosts is on the roadmap. For workloads where concurrent writes are semantically composable, CRDTs are the right tool — see the Why Coherence Matters doc for the layered model."
             }
           },
           {
@@ -890,10 +890,10 @@
 
   <section class="hero">
     <div class="container">
-      <p class="eyebrow">State consistency · Write-side coherence for collaborating agents</p>
-      <span class="badge">v<span class="ver">0.7.1</span> · Apache-2.0 · PyPI</span>
-      <h1>When agents share state, one of them is reading a stale copy.</h1>
-      <p class="lead">That stale read is how <strong>shared memory pollution</strong> starts — one agent's hallucination becomes a "fact" the next one reasons from, and a <strong>cascading error</strong> propagates downstream. agent-coherence makes the moment visible and serves the current version on the next read instead of rebroadcasting the full artifact every turn. Same library, same protocol, across <strong>LangGraph, CrewAI, AutoGen</strong>, and any custom orchestrator. Same behavior regardless of model provider (<strong>Anthropic, OpenAI, Google, Mistral, open-source</strong>).</p>
+      <p class="eyebrow">Write-side coherence for agents that share state</p>
+      <span class="badge">Apache-2.0 · Open source · PyPI</span>
+      <h1>One agent reads a stale copy and silently overwrites the newer version.</h1>
+      <p class="lead">It shows up anywhere two sessions, subagents, or processes share a file, a plan, or a store. One reads v1. Another commits v2. The first writes back, and v2 is gone, with no error raised. <strong>agent-coherence denies that stale write</strong>, makes the writer re-read, and hands the loser a typed conflict to retry. The lost update never lands silently. On a single host this works for sequential and concurrent writers alike. Drop it into <strong>LangGraph, CrewAI, AutoGen</strong>, or any custom orchestrator, and it behaves the same across model providers (<strong>Anthropic, OpenAI, Google, Mistral, open-source</strong>).</p>
 
       <blockquote class="stat-callout primary-callout">
         <p style="margin:0 0 8px;">"This asynchronicity adds challenges in result coordination, <strong>state consistency</strong>, and error propagation across the subagents."</p>
@@ -907,25 +907,12 @@
       </div>
 
       <div class="ctas">
-        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=launch" rel="noopener" data-cta-target="cal" data-cta-location="hero">Book a 15-min call →</a>
-        <a class="btn" href="https://github.com/hipvlady/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=launch" rel="noopener" data-cta-target="github" data-cta-location="hero">View on GitHub</a>
+        <a class="btn primary" href="https://github.com/hipvlady/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=launch" rel="noopener" data-cta-target="github" data-cta-location="hero">View on GitHub</a>
+        <a class="btn" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=launch" rel="noopener" data-cta-target="cal" data-cta-location="hero">Running multi-agent in prod? Book a call →</a>
         <a class="btn" href="https://arxiv.org/abs/2603.15183?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=launch" rel="noopener" data-cta-target="arxiv" data-cta-location="hero">Read the paper</a>
       </div>
 
-      <div class="stats">
-        <div class="stat">
-          <div class="num">69%</div>
-          <div class="label">token reduction on read-heavy workloads</div>
-        </div>
-        <div class="stat">
-          <div class="num">~12</div>
-          <div class="label">tokens per invalidation, vs full artifact rebroadcast</div>
-        </div>
-        <div class="stat">
-          <div class="num">$18K</div>
-          <div class="label">/year saved on one 1,000-runs/day code-review workload</div>
-        </div>
-      </div>
+      <!-- Cost stats relocated out of the hero (correctness leads; cost is a labeled secondary in the Benchmarks section below). -->
     </div>
   </section>
 
@@ -946,7 +933,7 @@
           <p class="col-label">Write-side coherence</p>
           <h3>Agents are themselves the source of truth.</h3>
           <p>The agents write — they collaborate on shared plans, edit specs, mutate memory, hand off scratchpads. You need a <strong>coherence protocol</strong> that detects stale reads and enforces single-writer ordering when one agent commits.</p>
-          <p style="margin: 12px 0 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--text);">Failure modes caught:</strong> stale reads · shared memory pollution · cascading errors · context handoff drift · concurrent-write conflicts.</p>
+          <p style="margin: 12px 0 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--text);">Failure modes caught:</strong> stale reads · shared memory pollution · cascading errors · context handoff drift · stale-read → lost update.</p>
           <p class="col-meta"><strong>Examples:</strong> multi-agent planners, parallel sub-agents editing a spec, <a href="/code/" data-cta-target="code-page" data-cta-location="write-side-card-inline">coding agents collaborating on a refactor</a>, research crews mutating shared notes.</p>
         </div>
       </div>
@@ -1138,7 +1125,7 @@ graph = builder.compile(store=store)</pre>
 
         <details class="faq-item">
           <summary>What happens when two agents try to write to the same artifact?</summary>
-          <p>The protocol enforces single-writer exclusivity. Only one agent holds write permission at a time; concurrent writes are prevented at the protocol level, not "resolved" by an append-only reducer that produces duplicates or unexpected list nesting. For workloads where concurrent writes are semantically composable, CRDTs are the right tool — see the <a href="https://github.com/hipvlady/agent-coherence/blob/main/docs/why-coherence-matters.md?utm_source=agent-coherence.dev&utm_medium=faq&utm_campaign=launch" rel="noopener" data-cta-target="github-doc" data-cta-location="faq">Why Coherence Matters</a> doc for the layered model.</p>
+          <p>The protocol enforces single-writer ordering. One agent reads, a peer commits a newer version, the first then writes — the stale writer is denied (its cache went INVALID) and must re-read, so the lost update is prevented, not silently applied. On a single host this holds for both sequential and concurrent writers: the concurrent same-key race is resolved by an optimistic commit-CAS plus fencing — the loser gets a typed conflict and retries, never a silent drop. Coordinating writers across multiple hosts is on the roadmap. For workloads where concurrent writes are semantically composable, CRDTs are the right tool — see the <a href="https://github.com/hipvlady/agent-coherence/blob/main/docs/why-coherence-matters.md?utm_source=agent-coherence.dev&utm_medium=faq&utm_campaign=launch" rel="noopener" data-cta-target="github-doc" data-cta-location="faq">Why Coherence Matters</a> doc for the layered model.</p>
         </details>
 
         <details class="faq-item">

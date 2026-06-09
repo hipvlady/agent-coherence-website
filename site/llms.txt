@@ -1,6 +1,6 @@
 # agent-coherence
 
-> agent-coherence is an open-source coherence protocol for shared artifacts in multi-agent LLM systems. It detects stale reads — moments when one agent's view of a shared artifact is older than another agent's just-committed version — and serves the current version on the next read instead of rebroadcasting the full artifact every turn. Implements a MESI-style cache-coherence protocol adapted from CPU cache design.
+> agent-coherence is an open-source coherence protocol for shared artifacts in multi-agent LLM systems. It **prevents the silent data-loss of a stale-read→write lost update** — when one agent or session reads an artifact, a peer commits a newer version, and the first writes back over it, the update is lost with no error. agent-coherence enforces single-writer ordering on a single host — for sequential and concurrent writers alike — serves the current version on the next read, and surfaces the divergence so the loss is never silent. Coordinating writers across multiple hosts is on the roadmap. It's also cheaper — ~12-token invalidation signals replace full-artifact rebroadcast — but correctness is the point. Implements a MESI-style cache-coherence protocol adapted from CPU cache design.
 >
 > Ships as **two products** with one underlying engine:
 >
@@ -24,7 +24,7 @@ The two fixes don't compete. Moving config-able rules to `permissions.deny` is h
 
 - **Detects stale reads.** When agent B reads an artifact after agent A has modified it, agent-coherence flags the stale read instead of silently serving outdated data. Most frameworks have no such mechanism; LangGraph's BaseStore documentation explicitly states it "does not natively support optimistic locking, vector versioning, or invalidation protocols."
 - **Serves the current version on the next read.** Rather than broadcasting the full artifact to every agent on every turn (the default in CrewAI, AutoGen, and most LangGraph patterns), agent-coherence sends ~12-token invalidation signals when state changes and only re-fetches on the next read.
-- **Enforces single-writer exclusivity per artifact.** Concurrent writes are prevented at the protocol level — not "resolved" by an append-only reducer that produces duplicates or unexpected list nesting.
+- **Enforces single-writer ordering — no silent lost updates on a single host.** Actor A reads v1, actor B commits v2, A then writes: A's write is denied (its cache went INVALID on B's commit) and A must re-read — the lost update is prevented, not silently applied. This holds for **both sequential and concurrent writers on a single host** — the concurrent same-key race is resolved by an optimistic commit-CAS plus fencing, so the loser gets a typed conflict and retries, never a silent drop. **Coordinating writers across multiple hosts is on the roadmap.** Single-writer is enforced by invalidation, not by an append-only reducer that produces duplicates or unexpected list nesting.
 - **Records what each agent saw.** Per-agent content-audit log with SHA-256 hashes per read, plus a sequence-numbered state-transition log. The data substrate for run replay and stale-read forensics.
 
 ## The plugin — what it does
@@ -32,7 +32,7 @@ The two fixes don't compete. Moving config-able rules to `permissions.deny` is h
 Aligns with Anthropic's published guidance for project-rule enforcement in Claude Code (Aug 2025, restated 2026): *"For deterministic behavior, your best bet is to use hooks."* The plugin is the hook implementation that closes the artifact-coherence gap.
 
 - **Wires `PreToolUse` hooks across five tool surfaces** — `Read`, `Edit`/`Write` (shared matcher), `Bash` (file-path-aware via the `bash_path_detector`), and `Grep`. Five-handler coverage exists because a single-handler `Read`-only version is bypassable: when a Read warning fires, the model can retry 2–5 times then route around via `bash cat plan.md`, and without Bash + Grep coverage that bypass is silent. The wider surface is correctness for warn mode and a security floor for strict mode (v0.2).
-- **On every covered tool call against a tracked artifact** the hook checks coordinator state. Warn mode (v0.1.1, default) injects the `additionalContext` warning. Strict mode (v0.2, per-artifact opt-in) returns `permissionDecision: "deny"` with byte-identical text on every retry.
+- **On every covered tool call against a tracked artifact** the hook checks coordinator state. Warn mode (default) injects the `additionalContext` warning. Strict mode (v0.2, per-artifact opt-in via `.coherence/strict_mode.yaml`) returns `permissionDecision: "deny"` on a **stale-read attempt** (a tool-call read-deny, never global), with byte-identical text on every retry — **on the Python coordinator backend; in v0.2 the Node coordinator stays warn-only (v0.3 brings strict mode to Node).**
 - **Per-workspace SQLite-backed coordinator.** Survives compaction. Survives crash. Re-hydrates on next session start.
 - **`permissions.deny`-aware.** Doesn't double-warn on tools the config already blocks.
 
@@ -81,7 +81,7 @@ agent-coherence is the coherence layer for any setup where multiple agents share
 
 - **Subagent fleets reviewing the same codebase** — style + security + architecture + synthesizer reviewers on the same files, with cache hits on the second-through-Nth read instead of re-reading from scratch.
 - **Planner-executor pairs editing a shared task spec** — the planner re-plans mid-flight (writes v2 with a 4th caller); the executor's behavior depends on whether write-side coherence is on.
-- **Refactor graphs fanning out across worktrees** — multiple sub-agents touching the same files concurrently; the coordinator enforces single-writer ordering and invalidates stale caches before commits land.
+- **Refactor graphs fanning out across worktrees** — sub-agents touching the same files across sequential commits; the coordinator invalidates stale caches and enforces single-writer ordering so a later write can't silently land on top of a version it never saw — sequential or concurrent, on a single host. (Coordinating across multiple hosts is on the roadmap.)
 
 ## Measured impact (library)
 
@@ -247,7 +247,7 @@ The plugin section above lays out the cross-cutting shape: the runtime emits coo
 2. **ACK layer.** A notification fires before the underlying process terminates; a claim doesn't wait for readiness.
 3. **Artifact-state layer.** One session's view of a shared file doesn't reflect another session's update.
 
-agent-coherence is the artifact-layer instance: *signals about shared state must reflect actual state*. The plugin doesn't compete with runtime fixes for the other two layers — it sits at the layer those fixes don't reach: **concurrent multi-session state coherence across worktrees and across mid-session artifact edits.**
+agent-coherence is the artifact-layer instance: *signals about shared state must reflect actual state*. The plugin doesn't compete with runtime fixes for the other two layers — it sits at the layer those fixes don't reach: **cross-session and cross-subagent artifact coherence across worktrees and across mid-session artifact edits.**
 
 ## Failure modes the protocol catches
 
@@ -257,7 +257,7 @@ The named failure modes the audience already has vocabulary for — sourced from
 - **Shared memory pollution.** One agent's hallucination becomes a "fact" subsequent agents reason from. Specifically: agent A writes incorrect content; agent B reads it as ground truth; agent C reads B's downstream work; the original error has now propagated three deep. Coherence semantics make the source of every read inspectable.
 - **Cascading error.** A specialist sub-agent misinterprets constraints; downstream agents incorporate the error into their analyses; the mistake compounds through multiple reasoning steps before detection. With per-agent state tracking, the divergence point is identifiable post-hoc.
 - **Context handoff drift.** Information loss between sub-agents that share artifacts through truncated messages or summary contexts. The artifact-coordination layer treats handoffs as version transitions, not as opaque message-passing.
-- **Concurrent-write conflicts.** Two agents attempt to update the same artifact. The protocol enforces single-writer exclusivity — concurrent writes are prevented, not "resolved" by an append-only reducer that produces duplicates or unexpected list nesting.
+- **Stale-read → lost update.** Actor A reads v1, a peer commits v2, A writes back over v2 — the update is lost, silently. The protocol enforces single-writer ordering so it doesn't: A's write is denied (its cache went INVALID) and A must re-read — for sequential and concurrent writers on a single host alike (the concurrent race resolved by optimistic commit-CAS + fencing; the loser retries, never a silent drop). Coordinating across multiple hosts is on the roadmap. Single-writer is enforced by invalidation, not by an append-only reducer that produces duplicates or unexpected list nesting.
 
 ## TAM beyond CLAUDE.md
 
