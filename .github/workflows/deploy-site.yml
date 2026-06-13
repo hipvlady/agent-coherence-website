@@ -31,6 +31,7 @@ jobs:
         run: |
           rsvg-convert -w 1200 -h 630 site/og-image.svg        -o site/og-image.png
           rsvg-convert -w 1200 -h 630 site/og-image-plugin.svg -o site/og-image-plugin.png
+          rsvg-convert -w 1200 -h 630 site/og-image-rag.svg    -o site/og-image-rag.png
           ls -la site/og-image*.*
 
       - name: Stamp build-time freshness dates
@@ -82,6 +83,7 @@ jobs:
                 "https://agent-coherence.dev/",
                 "https://agent-coherence.dev/code/",
                 "https://agent-coherence.dev/plugin/",
+                "https://agent-coherence.dev/rag/",
                 "https://agent-coherence.dev/llms.txt",
                 "https://agent-coherence.dev/sitemap.xml"
               ]

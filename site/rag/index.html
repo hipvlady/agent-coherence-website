@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>agent-coherence for RAG & shared agent memory — stop the silent lost update</title>
+
+  <meta name="description" content="RAG and agent memory are shared mutable state. One agent reads a record, a peer writes a newer version, the first writes back over it — silently. agent-coherence denies the stale write. A consistency layer under your store, not another vector DB.">
+  <meta name="keywords" content="RAG consistency, agent memory coherence, vector store stale read, langgraph store, CCSStore, lost update, shared agent memory, MESI, multi-agent RAG, Mem0, Letta, LlamaIndex, retrieval consistency, agent state consistency">
+  <meta name="author" content="Vladyslav Parakhin">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <link rel="canonical" href="https://agent-coherence.dev/rag/">
+
+  <meta property="og:title" content="Coherence for RAG & shared agent memory — stop the silent lost update">
+  <meta property="og:description" content="A consistent vector store doesn't save you: the staleness is in the agent's cached view, not the store. agent-coherence tracks who holds which record at which version and denies the stale write before it lands.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://agent-coherence.dev/rag/">
+  <meta property="og:image" content="https://agent-coherence.dev/og-image-rag.png">
+  <meta property="og:image:secure_url" content="https://agent-coherence.dev/og-image-rag.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="agent-coherence: two agents share a memory record; one writes a stale view over the newer version">
+  <meta property="og:site_name" content="agent-coherence">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Coherence for RAG & shared agent memory — stop the silent lost update">
+  <meta name="twitter:description" content="A consistent store doesn't save you — the stale copy is in the agent's view. agent-coherence denies the stale write before it lands. Single host, sequential lost-update guarantee, TLA+-checked.">
+  <meta name="twitter:image" content="https://agent-coherence.dev/og-image-rag.png">
+  <meta name="twitter:image:alt" content="agent-coherence: a stale agent view writing over a newer shared memory record">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/favicon.svg">
+  <link rel="mask-icon" href="/favicon.svg" color="#5eead4">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="color-scheme" content="dark light">
+  <meta name="application-name" content="agent-coherence">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": "https://agent-coherence.dev/rag/",
+    "url": "https://agent-coherence.dev/rag/",
+    "name": "Coherence for RAG & shared agent memory",
+    "description": "A consistency layer that sits underneath your retrieval and memory store. Tracks which agent holds which record at which version and denies a stale-view write before it silently overwrites a newer one. Single host, sequential lost-update guarantee, machine-checked in TLA+.",
+    "inLanguage": "en-US",
+    "isPartOf": { "@id": "https://agent-coherence.dev/#website" },
+    "about": { "@id": "https://agent-coherence.dev/#software" },
+    "primaryImageOfPage": "https://agent-coherence.dev/og-image.png"
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "agent-coherence", "item": "https://agent-coherence.dev/" },
+      { "@type": "ListItem", "position": 2, "name": "RAG & memory", "item": "https://agent-coherence.dev/rag/" }
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "@id": "https://agent-coherence.dev/rag/#faq",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Does agent-coherence replace my vector database or memory store?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. It is a consistency layer that sits underneath your retrieval and memory store. It does not embed, rank, or store vectors. It tracks which agent holds which record at which version and invalidates a reader's cached view when a peer writes, so a stale view cannot silently overwrite a newer one. Use it with Mem0, Letta, LlamaIndex, a LangGraph store, or a plain file."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "My vector store is already consistent. Why do I need this?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A consistent store does not save you, because the staleness is not in the store — it is in the agent's cached copy. Two agents read a record at version 1; one writes version 2; the other, still holding the version-1 it read minutes ago, writes its edit computed from version 1 and clobbers version 2. The store did nothing wrong. Coherence keeps the readers honest: the moment one writes, the others' copies are invalidated before they can write a stale value back."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does it work with LangGraph memory?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. CCSStore is a drop-in for langgraph.store — store.get(), store.put(), and store.search() keep working unchanged. Reads serve the current version, and a write from a stale view is denied rather than silently applied. It is one import change with no node code changes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does it detect when an external file or index changes out of band?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "For writes that go through the coordinator — a peer agent, another session, or your retrieval layer wired through CCSStore or CoherentVolume — yes. Auto-watching an unmanaged external source that changes with no coordinator write (a user hand-editing the raw file, an out-of-band re-index) is on the roadmap, demand-gated; it is not shipped today."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does it handle concurrent writers?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "On a single host, yes: concurrent same-key writers are serialized by optimistic commit-CAS — exactly one wins and the loser gets a typed conflict with bounded retry, never a silent drop. Cross-host fencing is on the roadmap, demand-gated. The clean, headline guarantee is the sequential stale-read-then-write lost update."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+  <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cal.com">
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJ3C5FZX64"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-NJ3C5FZX64', {
+      anonymize_ip: true,
+      linker: { domains: ['cal.com', 'agent-coherence.dev'] }
+    });
+  </script>
+
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #131418;
+      --surface-2: #1a1c22;
+      --border: #262830;
+      --text: #e8e8ea;
+      --muted: #9095a0;
+      --accent: #5eead4;
+      --accent-dim: #14b8a6;
+      --warn: #fb7185;
+      --code-bg: #11131a;
+      --max-width: 920px;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --surface: #f7f8fa;
+        --surface-2: #eef0f4;
+        --border: #e3e5ea;
+        --text: #0a0a0a;
+        --muted: #5a6070;
+        --accent: #0d9488;
+        --code-bg: #f1f3f7;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 18px; }
+    h2 { font-size: 1.5rem; letter-spacing: -0.01em; margin: 48px 0 14px; }
+    h3 { margin: 0 0 8px; font-size: 1.08rem; font-weight: 600; }
+    p.lead { font-size: 1.18rem; color: var(--muted); line-height: 1.55; }
+
+    /* Header */
+    header.site {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 0;
+      background: rgba(10, 10, 10, 0.78);
+      backdrop-filter: saturate(180%) blur(14px);
+      -webkit-backdrop-filter: saturate(180%) blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    @media (prefers-color-scheme: light) { header.site { background: rgba(255, 255, 255, 0.78); } }
+    header.site .container { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text); font-size: 1.02rem; letter-spacing: -0.01em; flex-shrink: 0; }
+    .brand:hover { text-decoration: none; color: var(--text); }
+    .brand-logo { width: 22px; height: 22px; color: var(--accent); flex-shrink: 0; }
+    .brand .dot { color: var(--accent); }
+    nav.site { display: flex; align-items: center; gap: 22px; flex: 1; justify-content: center; }
+    nav.site a { color: var(--muted); font-size: 0.92rem; transition: color 0.15s ease; }
+    nav.site a:hover { color: var(--text); text-decoration: none; }
+    nav.site a.current { color: var(--text); }
+
+    .btn {
+      display: inline-block; padding: 12px 18px; border-radius: 8px; font-weight: 600;
+      font-size: 0.95rem; border: 1px solid var(--border); color: var(--text); background: var(--surface);
+      transition: all 0.15s ease;
+    }
+    .btn:hover { background: var(--surface-2); text-decoration: none; }
+    .btn.primary { background: var(--accent); color: #06231f; border-color: var(--accent); }
+    .btn.primary:hover { background: var(--accent-dim); }
+    .header-cta { padding: 8px 16px; font-size: 0.9rem; flex-shrink: 0; }
+    @media (max-width: 760px) {
+      nav.site { display: none; }
+      header.site { padding: 12px 0; }
+      .header-cta { padding: 7px 14px; font-size: 0.85rem; }
+    }
+
+    /* Hero */
+    section.hero { padding: 56px 0 24px; }
+    .eyebrow { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
+    .badge { display: inline-block; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-size: 0.75rem; letter-spacing: 0.04em; margin-bottom: 18px; }
+    .badge .ver { color: var(--accent); }
+    .ctas { display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0 8px; }
+
+    /* Sections */
+    section { padding: 28px 0; }
+    .container > p { color: var(--muted); }
+    .container > p strong { color: var(--text); }
+
+    /* Code block */
+    pre.code {
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
+      padding: 18px 20px; overflow-x: auto; font-size: 0.875rem; line-height: 1.6;
+      margin: 16px 0; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    }
+    pre.code .c { color: var(--muted); }
+    pre.code .k { color: var(--accent); }
+    pre.code .s { color: var(--warn); }
+    .container p code, .scene-meta code, li code {
+      background: var(--code-bg); border: 1px solid var(--border);
+      padding: 1px 6px; border-radius: 4px; font-size: 0.85em;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    }
+
+    /* Scene cards — sequential narrative beats */
+    .scene-card {
+      margin: 24px 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .scene-card.scene-pivot { border-left: 4px solid var(--warn); }
+    .scene-card.scene-resolve { border-left: 4px solid var(--accent); }
+    .scene-card.scene-context { border-left: 4px solid var(--accent-dim); }
+    .scene-card header {
+      padding: 20px 24px 18px;
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .scene-num {
+      margin: 0;
+      font-size: 1.9rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent);
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      letter-spacing: -0.04em;
+    }
+    .scene-card.scene-pivot .scene-num { color: var(--warn); }
+    .scene-card header h3 { margin: 0 0 6px; font-size: 1.08rem; letter-spacing: -0.01em; }
+    .scene-meta { margin: 0; color: var(--muted); font-size: 0.95rem; line-height: 1.55; }
+    .scene-meta code { background: var(--code-bg); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
+
+    /* Honesty bullets */
+    .not-list {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0;
+      display: grid;
+      gap: 10px;
+    }
+    .not-list li {
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--muted);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+    .not-list li strong { color: var(--text); }
+
+    /* Mechanism outcomes list — the two paths */
+    .mechanism-outcomes {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0;
+      display: grid;
+      gap: 12px;
+    }
+    .mechanism-outcomes li {
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+    .mechanism-outcomes li strong { color: var(--text); }
+    .mechanism-outcomes li:nth-child(1) { border-left: 3px solid var(--warn); }
+    .mechanism-outcomes li:nth-child(2) { border-left: 3px solid var(--accent); }
+
+    /* Aphorism pull-quote */
+    .aphorism {
+      margin: 18px auto;
+      max-width: 720px;
+      padding: 18px 24px;
+      border-left: 3px solid var(--accent);
+      background:
+        linear-gradient(90deg, rgba(94, 234, 212, 0.06), transparent 70%),
+        var(--surface);
+      border-radius: 4px;
+    }
+    .aphorism p {
+      margin: 0;
+      font-size: 1.08rem;
+      font-style: italic;
+      color: var(--text);
+      line-height: 1.55;
+      letter-spacing: -0.01em;
+    }
+    .aphorism footer {
+      margin-top: 8px;
+      font-size: 0.84rem;
+      color: var(--muted);
+      font-style: normal;
+    }
+
+    /* Positioning table */
+    .rules-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 18px 0 12px;
+      font-size: 0.92rem;
+    }
+    .rules-table th {
+      background: var(--surface);
+      color: var(--text);
+      text-align: left;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .rules-table th:first-child { border-top-left-radius: 8px; }
+    .rules-table th:last-child { border-top-right-radius: 8px; }
+    .rules-table td {
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-top: none;
+      color: var(--muted);
+      vertical-align: top;
+      line-height: 1.5;
+    }
+    .rules-table tr:last-child td:first-child { border-bottom-left-radius: 8px; }
+    .rules-table tr:last-child td:last-child { border-bottom-right-radius: 8px; }
+    .rules-table td strong { color: var(--text); }
+    .rules-table td code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.86em;
+    }
+    .rules-table tr.this-row td { background: linear-gradient(90deg, rgba(94, 234, 212, 0.04), transparent 70%); }
+    .rules-table tr.this-row td:first-child { border-left: 3px solid var(--accent); }
+    @media (max-width: 720px) {
+      .rules-table, .rules-table thead, .rules-table tbody, .rules-table th, .rules-table td, .rules-table tr { display: block; }
+      .rules-table thead { display: none; }
+      .rules-table td { border-top: 1px solid var(--border); }
+      .rules-table td::before { content: attr(data-label); display: block; font-weight: 700; font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+    }
+
+    /* Invariant block */
+    .invariant {
+      margin: 28px 0 12px;
+      padding: 22px 24px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      background:
+        linear-gradient(90deg, rgba(94, 234, 212, 0.04), transparent 70%),
+        var(--surface);
+    }
+    .invariant h3 { margin: 0 0 10px; font-size: 1.08rem; font-weight: 700; color: var(--text); }
+    .invariant p { margin: 0; color: var(--muted); font-size: 0.96rem; line-height: 1.6; }
+    .invariant p + p { margin-top: 10px; }
+    .invariant strong { color: var(--text); }
+    .invariant em { color: var(--text); font-style: italic; }
+
+    /* CTA strip */
+    .cta-strip {
+      margin: 48px 0 24px;
+      padding: 32px 28px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .cta-strip h3 { margin: 0; font-size: 1.2rem; }
+    .cta-strip p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; }
+
+    /* Footer */
+    footer.site {
+      border-top: 1px solid var(--border);
+      padding: 36px 0 56px;
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer.site .container { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    footer.site a { color: var(--muted); margin-left: 14px; }
+    footer.site a:first-child { margin-left: 0; }
+    footer.site a:hover { color: var(--accent); text-decoration: none; }
+    footer.site a.social-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 6px;
+      vertical-align: middle; transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    footer.site a.social-icon:hover { color: var(--accent); border-color: var(--accent-dim); }
+  </style>
+</head>
+<body>
+
+  <header class="site">
+    <div class="container">
+      <a class="brand" href="/" aria-label="agent-coherence home">
+        <svg class="brand-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="7" cy="12" r="3.6" fill="currentColor"/>
+          <circle cx="17" cy="12" r="3.6" stroke="currentColor" stroke-width="1.8"/>
+          <line x1="10.6" y1="12" x2="13.4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span>agent-coherence<span class="dot">.</span></span>
+      </a>
+      <nav class="site" aria-label="Primary">
+        <a href="/#how">How</a>
+        <a href="/#frameworks">Frameworks</a>
+        <a class="current" href="/rag/">RAG &amp; memory</a>
+        <a href="/code/">Code</a>
+        <a href="/plugin/">Plugin</a>
+        <a href="https://github.com/hipvlady/agent-coherence?utm_source=agent-coherence.dev&utm_medium=nav&utm_campaign=rag" rel="noopener" data-cta-target="github" data-cta-location="nav">GitHub</a>
+      </nav>
+      <a class="btn primary header-cta" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_header&utm_campaign=rag" rel="noopener" data-cta-target="cal" data-cta-location="header">Book a call</a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <p class="eyebrow">Consistency layer · RAG &amp; shared memory</p>
+      <span class="badge">Apache-2.0 · single host · sequential lost-update guarantee · TLA+-checked</span>
+      <h1>Your agents' shared memory has a lost-update bug. RAG didn't introduce it. It widened the surface.</h1>
+      <p class="lead">Retrieval and agent memory are shared mutable state. Two agents read the same record at version&nbsp;1. One writes version&nbsp;2. The other, still holding the version&nbsp;1 it read minutes ago, writes its edit back and erases version&nbsp;2. Last write wins, the update is silently gone, nothing errors, and every downstream answer builds on a version that no longer exists. <strong>agent-coherence turns that silent clobber into a typed refusal:</strong> a consistency layer that sits under your store, not another vector DB.</p>
+
+      <aside class="aphorism">
+        <p>"The lost update is older than LLMs. Databases named it and solved it decades ago. Agent fleets quietly reintroduced it on a surface those decades of work never covered: the shared memory every run reads and writes."</p>
+        <footer>— the failure this page is about, in one line.</footer>
+      </aside>
+
+      <div class="ctas">
+        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=rag" rel="noopener" data-cta-target="cal" data-cta-location="hero">Book a call &rarr;</a>
+        <a class="btn" href="https://github.com/hipvlady/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_hero&utm_campaign=rag" rel="noopener" data-cta-target="github" data-cta-location="hero">View on GitHub</a>
+        <a class="btn" href="#run">See it run &darr;</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="why">
+    <div class="container">
+      <h2>A consistent store doesn't save you.</h2>
+      <p>The first instinct is to reach for a stronger store: a transactional vector DB, an ACID memory backend. It doesn't help, because the stale copy isn't in the store. It's in the agent's view.</p>
+
+      <article class="scene-card scene-context">
+        <header>
+          <p class="scene-num">1</p>
+          <div>
+            <h3>Two agents read the same record.</h3>
+            <p class="scene-meta">A retrieval result, a <code>memory.json</code> entry, a <code>plan.md</code>, a store key. Agent&nbsp;A and agent&nbsp;B both read it at <strong style="color:var(--text)">version&nbsp;1</strong> and start working from that snapshot.</p>
+          </div>
+        </header>
+      </article>
+
+      <article class="scene-card scene-pivot">
+        <header>
+          <p class="scene-num">2</p>
+          <div>
+            <h3>A writes. B is now holding the past.</h3>
+            <p class="scene-meta">A finishes, writes <strong style="color:var(--text)">version&nbsp;2</strong>, and releases. The store is perfectly consistent. It has v2. But B is still operating on the v1 it read minutes ago. There was no real concurrency. B's world simply moved on without it.</p>
+          </div>
+        </header>
+      </article>
+
+      <article class="scene-card scene-pivot">
+        <header>
+          <p class="scene-num">3</p>
+          <div>
+            <h3>B writes its v1-derived edit. v2 is gone.</h3>
+            <p class="scene-meta">B computes its change from v1 and writes it back, overwriting v2. The filesystem did nothing wrong. No exception fired. A's work is simply erased, and the next retrieval returns B's version as if A's had never existed. <strong style="color:var(--warn)">This is the lost update.</strong></p>
+          </div>
+        </header>
+      </article>
+
+      <p style="margin-top: 20px;">This is the exact shape CPUs faced in the 1980s and solved with <strong>cache coherence</strong>: every core can hold a shared line, but the instant one core writes, the others' copies are invalidated <em>before</em> they can read or write back a stale value. The backing memory was never the problem. Keeping the readers honest was.</p>
+    </div>
+  </section>
+
+  <section id="fix">
+    <div class="container">
+      <h2>The fix is on the readers, not the store.</h2>
+      <p>So the missing layer isn't a better database. It's something that tracks which agent holds which record at which version, and invalidates a reader's view the instant a peer writes. The stale writer is stopped and made to re-read before it can act.</p>
+      <p>That's what <code>agent-coherence</code> is: a small MESI-derived protocol with single-writer / multiple-reader per record, monotonic versions, and a cheap (~12-token) invalidation signal instead of rebroadcasting the whole record every turn. In the lost-update case, concretely:</p>
+      <ul class="mechanism-outcomes">
+        <li><strong>Without coherence:</strong> B holds a stale v1, writes, and silently erases v2. You find out, if you ever do, when a downstream answer is wrong and the audit trail has no error in it.</li>
+        <li><strong>With coherence:</strong> when A commits v2, B drops to <code>INVALID</code>. B's next write is <strong>denied fail-closed</strong>. B must call <code>reacquire()</code>, which re-mints its identity and forces a fresh read, before it can write again. A bare retry doesn't clear the denial. That's deliberate, so a naive loop can't overwrite its way through. Both updates survive.</li>
+      </ul>
+
+      <div class="invariant">
+        <h3>Why "denied," not "warned."</h3>
+        <p>The refusal is load-bearing. The deny is single-writer <em>by invalidation</em>, not a mutex you hold. The safety properties behind it (<code>SingleWriter</code>, <code>MonotonicVersion</code>, <code>NoLostUpdate</code>, <code>NoStaleApply</code>) are machine-checked in TLA+, with <code>make&nbsp;tla-check</code> running every spec in CI and every spec carrying a documented mutant that must fail. The guarantee is structural, not a prompt asking the model to be careful.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="dropin">
+    <div class="container">
+      <h2>One import, on the store you already use.</h2>
+      <p><strong>If you're on a LangGraph store</strong>, the layer your RAG and memory reads and writes flow through, <code>CCSStore</code> is a drop-in. <code>store.get()</code>, <code>store.put()</code>, and <code>store.search()</code> keep working unchanged. Reads now serve the current version, and a write from a stale view can't silently land.</p>
+
+      <pre class="code"><span class="c"># Before</span>
+<span class="k">from</span> langgraph.store.memory <span class="k">import</span> InMemoryStore
+store = InMemoryStore()
+
+<span class="c"># After — one import change, no node code changes</span>
+<span class="k">from</span> ccs.adapters <span class="k">import</span> CCSStore
+store = CCSStore(strategy=<span class="s">"lazy"</span>)</pre>
+
+      <p style="margin-top: 24px;"><strong>If your shared memory is plain files</strong> across processes or sessions, say a <code>memory.json</code>, a <code>LEARNINGS.md</code>, or a scratchpad every run reads and writes, then <code>CoherentVolume</code> wraps them with the same protocol, no framework required.</p>
+
+      <pre class="code"><span class="k">from</span> ccs.adapters.coherent_volume <span class="k">import</span> CoherentVolume
+
+vol = CoherentVolume(workspace_root, managed=(<span class="s">"memory/**"</span>,))
+record = vol.read(<span class="s">"memory/learnings.md"</span>)     <span class="c"># tracked read — your view is registered</span>
+vol.write(<span class="s">"memory/learnings.md"</span>, revised)    <span class="c"># stale view? denied fail-closed → vol.reacquire() and re-derive</span></pre>
+
+      <p style="margin-top: 16px; font-size: 0.92rem;">Same protocol underneath either surface, and the same behavior regardless of which model provider (Anthropic, OpenAI, Google, Mistral, open-source) the agents talk to. Already on CrewAI, AutoGen, the OpenAI Agents SDK, or a custom loop? The library exposes the same coordinator through each of those seams.</p>
+    </div>
+  </section>
+
+  <section id="run">
+    <div class="container">
+      <h2>See it run: deterministic, no keys.</h2>
+      <p>Two runnable demos reproduce the failure and then prevent it. Both are offline and deterministic, with no API keys and no spend.</p>
+
+      <article class="scene-card scene-resolve">
+        <header>
+          <p class="scene-num">A</p>
+          <div>
+            <h3>Conversation memory goes stale across turns.</h3>
+            <p class="scene-meta">Two agents share one conversation. One caches it, the other revises it, and the first acts on a stale copy. <code>CoherenceAdapterCore</code> invalidates the stale cache so the reader re-fetches before it acts. <br><code>python -m examples.conversations_stale_read.main</code></p>
+          </div>
+        </header>
+      </article>
+
+      <article class="scene-card scene-resolve">
+        <header>
+          <p class="scene-num">B</p>
+          <div>
+            <h3>The shared-file lost update, reproduced and prevented.</h3>
+            <p class="scene-meta">A faithful offline reproduction of a documented data-loss event (one shared file, sequential runs, earlier content destroyed on overwrite) paired with the coherence layer that catches the stale write before it lands. <br><code>python -m examples.coherent_volume.main</code></p>
+          </div>
+        </header>
+      </article>
+
+      <div class="invariant" style="border-left-color: var(--accent-dim);">
+        <h3>The honest framing the demos ship with.</h3>
+        <p>The conversation demo measured the providers first: a 100-trial OpenAI + 20-trial Mistral probe observed <em>zero</em> stale reads from the Conversations APIs, since both commit a write before returning the ACK. <strong>The APIs are not the bug. The client cache is.</strong> Agents cache state locally to avoid re-paying for the whole history, and that local copy goes stale the moment a peer writes, regardless of how consistent the server is. Coherence is about the readers. We don't claim those APIs serve stale reads, because in our trials they didn't.</p>
+      </div>
+
+      <p style="margin-top: 8px; font-size: 0.92rem;"><code>pip install agent-coherence</code> gets the adapters. The runnable demos live in the repo: <a href="https://github.com/hipvlady/agent-coherence/tree/main/examples?utm_source=agent-coherence.dev&utm_medium=demo_link&utm_campaign=rag" rel="noopener" data-cta-target="github-examples" data-cta-location="run">github.com/hipvlady/agent-coherence/tree/main/examples</a>.</p>
+    </div>
+  </section>
+
+  <section id="where">
+    <div class="container">
+      <h2>Where it sits: under your memory stack, not in front of it.</h2>
+      <p>agent-coherence is a <strong>consistency</strong> layer (does your view match the current version?), not a <strong>retrieval</strong> layer (which chunk is most relevant?). It partners underneath your memory and RAG vendors. It never tries to become one.</p>
+
+      <div style="overflow-x: auto;">
+      <table class="rules-table">
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Owns</th>
+            <th>Examples</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="Layer"><strong>Retrieval / memory</strong></td>
+            <td data-label="Owns">Embedding, ranking, storage, recall</td>
+            <td data-label="Examples">Mem0, Letta, LlamaIndex, your vector DB, a LangGraph store</td>
+          </tr>
+          <tr class="this-row">
+            <td data-label="Layer"><strong>Coherence (this)</strong></td>
+            <td data-label="Owns">Whose cached view is current; denying a stale-view write before it lands</td>
+            <td data-label="Examples"><code>CCSStore</code>, <code>CoherentVolume</code>, <code>CoherenceAdapterCore</code></td>
+          </tr>
+          <tr>
+            <td data-label="Layer"><strong>Orchestration</strong></td>
+            <td data-label="Owns">Who runs, in what order, with what tools</td>
+            <td data-label="Examples">LangGraph, CrewAI, AutoGen, custom loops</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <p style="margin-top: 16px; font-size: 0.92rem;">It doesn't embed, rank, or store vectors. It adds the one thing the retrieval layer doesn't give you: a guarantee that the version your agent is about to write over is the version it actually read.</p>
+    </div>
+  </section>
+
+  <section id="what-not">
+    <div class="container">
+      <h2>What this doesn't claim.</h2>
+      <p>Claiming less than the library does is the cheaper credibility trade. The honest scope is narrower than the headline, and worth stating plainly.</p>
+      <ul class="not-list">
+        <li><strong>The clean guarantee is sequential and single-host.</strong> The headline case (one agent reads, a peer writes, the first writes back stale) is denied fail-closed under a single coordinator. Concurrent same-key writers on that host are also covered (optimistic commit-CAS: exactly one wins, the loser gets a typed conflict with bounded retry). <strong style="color:var(--text)">Cross-host fencing is on the roadmap, demand-gated.</strong></li>
+        <li><strong>The deny is invalidation, not a mutex.</strong> There's no lock you hold across a critical section. A stale write is refused. <code>reacquire()</code> re-mints identity and forces a fresh read, and a bare retry does not clear the denial. That's the whole mechanism: single-writer by invalidation.</li>
+        <li><strong>It doesn't auto-watch unmanaged external sources yet.</strong> If a write goes through the coordinator (a peer agent, another session, your store via <code>CCSStore</code> or <code>CoherentVolume</code>) the stale view is caught. A user hand-editing the raw file, or an out-of-band re-index that never touches the coordinator, is the source-watcher case: <strong style="color:var(--text)">on the roadmap, not shipped today.</strong></li>
+        <li><strong>It isn't your memory or RAG store.</strong> No embeddings, no ranking, no vectors. It's the consistency layer underneath whatever you already use to retrieve and remember.</li>
+        <li><strong>No cost number on this page, on purpose.</strong> Correctness is the wedge here. The temporal change-rate cost benchmark (how many re-fetches and re-embeds coherence-gating avoids as a source changes between turns) is a separate measurement, pre-registered and still in progress. When it lands, it ships as its own labeled figure, not spliced into a number on this page.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="cta">
+    <div class="container">
+      <div class="cta-strip">
+        <div>
+          <h3>Running multi-agent RAG or shared agent memory?</h3>
+          <p>15-minute call. Walk me through your store and memory write-back loop, and I'll tell you where the lost-update surface is and whether the sequential single-host guarantee covers it, or whether you're in the cross-host case that's still on the roadmap.</p>
+        </div>
+        <a class="btn primary" href="https://cal.com/agent-coherence?utm_source=agent-coherence.dev&utm_medium=cta_bottom&utm_campaign=rag" rel="noopener" data-cta-target="cal" data-cta-location="bottom">Book a call &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site">
+    <div class="container">
+      <span>&copy; 2026 agent-coherence &middot; Apache-2.0</span>
+      <nav aria-label="Footer">
+        <a href="/" data-cta-target="home" data-cta-location="footer">Home</a>
+        <a href="/code/" data-cta-target="code-page" data-cta-location="footer">Code page</a>
+        <a href="/plugin/" data-cta-target="plugin-page" data-cta-location="footer">Plugin</a>
+        <a href="https://github.com/hipvlady/agent-coherence?utm_source=agent-coherence.dev&utm_medium=footer&utm_campaign=rag" rel="noopener" data-cta-target="github-library" data-cta-location="footer">Library repo</a>
+        <a href="https://arxiv.org/abs/2603.15183?utm_source=agent-coherence.dev&utm_medium=footer&utm_campaign=rag" rel="noopener" data-cta-target="arxiv" data-cta-location="footer">arXiv</a>
+        <a href="mailto:contact@agent-coherence.dev" data-cta-target="email" data-cta-location="footer">contact@agent-coherence.dev</a>
+        <a class="social-icon" href="https://www.linkedin.com/company/agent-coherence/about/?utm_source=agent-coherence.dev&utm_medium=footer&utm_campaign=rag" rel="noopener me" aria-label="agent-coherence on LinkedIn" data-cta-target="linkedin" data-cta-location="footer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.44-2.13 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/>
+          </svg>
+        </a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    document.querySelectorAll('[data-cta-target]').forEach(el => {
+      el.addEventListener('click', () => {
+        if (!window.gtag) return;
+        gtag('event', 'cta_click', {
+          cta_target: el.getAttribute('data-cta-target'),
+          cta_location: el.getAttribute('data-cta-location') || 'unknown',
+          cta_text: (el.textContent || '').trim().slice(0, 60),
+          page: 'rag'
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>

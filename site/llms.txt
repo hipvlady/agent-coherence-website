@@ -285,6 +285,7 @@ The same fragility applies to skill instructions and slash-command prompts loade
 - **Home:** https://agent-coherence.dev
 - **Library landing page:** https://agent-coherence.dev/code/
 - **Plugin landing page:** https://agent-coherence.dev/plugin/
+- **RAG & shared-memory landing page:** https://agent-coherence.dev/rag/
 - **Library discussions:** https://github.com/hipvlady/agent-coherence/discussions
 - **Plugin discussions:** https://github.com/hipvlady/agent-coherence-plugin/discussions
 - **Contact:** contact@agent-coherence.dev
