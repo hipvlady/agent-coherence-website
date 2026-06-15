@@ -267,6 +267,25 @@
     .scene-card header h3 { margin: 0 0 6px; font-size: 1.08rem; letter-spacing: -0.01em; }
     .scene-meta { margin: 0; color: var(--muted); font-size: 0.95rem; line-height: 1.55; }
     .scene-meta code { background: var(--code-bg); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
+    /* Terminal-recording GIF + reproduce footnote (ported from /code). */
+    .cast-gif {
+      display: block;
+      width: calc(100% - 40px);
+      max-width: 100%;
+      height: auto;
+      margin: 0 20px 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #0a0a0a;
+    }
+    .cast-footnote {
+      margin: 28px 0 8px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.55;
+    }
+    .cast-footnote a { color: var(--accent); border-bottom: 1px dotted var(--accent-dim); }
+    .cast-footnote a:hover { border-bottom-style: solid; }
 
     /* Honesty bullets */
     .not-list {
@@ -584,7 +603,10 @@ vol.write(<span class="s">"memory/learnings.md"</span>, revised)    <span class=
             <p class="scene-meta">A faithful offline reproduction of a documented data-loss event (one shared file, sequential runs, earlier content destroyed on overwrite) paired with the coherence layer that catches the stale write before it lands. <br><code>python -m examples.coherent_volume.main</code></p>
           </div>
         </header>
+        <img class="cast-gif" src="/rag/gifs/lost-update.gif" alt="Terminal recording of the lost-update demo. BROKEN run (plain files): two agents update a shared total (start 100; A adds 10, B adds 5) — A writes 110, then B writes 105 from its older read; the run reports LOST UPDATE: True (final=105, expected=115). FIXED run (CoherentVolume): B's stale write is denied fail-closed, B reacquires the current value and rewrites; the run reports LOST UPDATE: False (final=115). Both updates survive." loading="lazy" width="987" height="644">
       </article>
+
+      <p class="cast-footnote">Real terminal output from <code>examples/coherent_volume</code> in agent-coherence (v0.9.3+), captured with <a href="https://asciinema.org/" rel="noopener">asciinema</a> and rendered to GIF via <a href="https://github.com/asciinema/agg" rel="noopener">agg</a>. Reproduce: <code>AGENT_COHERENCE_REPO=&lt;path&gt; ./outreach/plugin-demo/record-coherent-volume.sh</code>. Source: <a href="https://github.com/hipvlady/agent-coherence/tree/main/examples/coherent_volume?utm_source=agent-coherence.dev&utm_medium=cast_footnote&utm_campaign=rag" rel="noopener" data-cta-target="github-example" data-cta-location="cast-footnote">agent-coherence/examples/coherent_volume</a>.</p>
 
       <div class="invariant" style="border-left-color: var(--accent-dim);">
         <h3>The honest framing the demos ship with.</h3>
