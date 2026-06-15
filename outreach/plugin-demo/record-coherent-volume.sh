@@ -49,16 +49,38 @@ fi
 
 mkdir -p "$OUT_DIR"
 
-# ─── Record ──────────────────────────────────────────────────────────────────
-# Filter the demo's stderr — the fixed run spawns a coordinator subprocess.
-echo "─── recording coherent_volume into $CAST_V3 ─────────────────────────"
+# ─── Record (paced) ──────────────────────────────────────────────────────────
+# The demo prints near-instantly, which reads like a static dump. Pace it
+# line-by-line through a small runner so the broken→fixed sequence unfolds, with
+# longer holds on each LOST UPDATE verdict (the payload). Filter the demo's
+# stderr — the fixed run spawns a coordinator subprocess. NOTE: --idle-time-limit
+# must exceed the longest pacing pause (1.8s) or asciinema would clamp it.
+RUNNER="$OUT_DIR/.run-coherent-volume.sh"
+cat > "$RUNNER" <<RUNEOF
+#!/usr/bin/env bash
+cd '$AGENT_COHERENCE_REPO'
+PYTHONWARNINGS=ignore '$PYTHON' -m examples.coherent_volume.main 2>/dev/null | while IFS= read -r line; do
+  printf '%s\n' "\$line"
+  case "\$line" in
+    *'LOST UPDATE: True'*)  sleep 1.8 ;;   # let the data-loss land
+    *'LOST UPDATE: False'*) sleep 1.6 ;;   # let the prevention land
+    *BROKEN*|*FIXED*)        sleep 0.7 ;;   # beat before each scene
+    Takeaway*)              sleep 0.6 ;;
+    '')                     sleep 0.25 ;;
+    *)                      sleep 0.22 ;;   # per-line typing cadence
+  esac
+done
+RUNEOF
+
+echo "─── recording coherent_volume (paced) into $CAST_V3 ─────────────────"
 TERM=xterm-256color asciinema rec \
-  --idle-time-limit 1.2 \
+  --idle-time-limit 2.5 \
   --cols 100 \
   --rows 28 \
   --overwrite \
-  --command "cd '$AGENT_COHERENCE_REPO' && PYTHONWARNINGS=ignore '$PYTHON' -m examples.coherent_volume.main 2>/dev/null" \
+  --command "bash '$RUNNER'" \
   "$CAST_V3"
+rm -f "$RUNNER"
 
 # ─── Convert v3 → v2 ─────────────────────────────────────────────────────────
 echo "─── converting to asciicast v2 ───────────────────────────────────────"
