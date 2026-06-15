@@ -94,9 +94,9 @@
     <text x="600" y="215" text-anchor="middle" class="total-num" fill="#5eead4">100</text>
     <text x="470" y="245" class="cache-line" fill="#9095a0">version @ v1</text>
     <line x1="450" y1="195" x2="325" y2="195" stroke="#9095a0" stroke-width="2" marker-end="url(#arrow-muted)"/>
-    <text x="335" y="185" class="arrow-label" fill="#9095a0">read → 100</text>
+    <text x="387" y="183" text-anchor="middle" class="arrow-label" fill="#9095a0">read → 100</text>
     <line x1="750" y1="195" x2="875" y2="195" stroke="#9095a0" stroke-width="2" marker-end="url(#arrow-muted)"/>
-    <text x="765" y="185" class="arrow-label" fill="#9095a0">read → 100</text>
+    <text x="812" y="183" text-anchor="middle" class="arrow-label" fill="#9095a0">read → 100</text>
     <text x="80" y="245" class="cache-line" fill="#5eead4">A: 100</text>
     <text x="900" y="245" class="cache-line" fill="#5eead4">B: 100</text>
   </g>
@@ -106,18 +106,18 @@
     <text x="600" y="215" text-anchor="middle" class="total-num" fill="#5eead4">110</text>
     <text x="470" y="245" class="cache-line" fill="#9095a0">version @ v2</text>
     <line x1="325" y1="200" x2="448" y2="200" stroke="#5eead4" stroke-width="2.5" marker-end="url(#arrow-accent)"/>
-    <text x="335" y="190" class="arrow-label">write(110)</text>
+    <text x="386" y="190" text-anchor="middle" class="arrow-label">write(110)</text>
     <text x="80" y="245" class="cache-line" fill="#9095a0">A: wrote 110</text>
     <text x="900" y="245" class="cache-line" fill="#fb7185">B: 100 (stale)</text>
   </g>
 
   <!-- ─── Phase 2: BROKEN — B writes 105 from stale read, clobbers A ──────────── -->
   <g class="phase phase-2">
+    <rect x="560" y="187" width="80" height="34" rx="6" fill="none" stroke="#fb7185" stroke-width="2" class="clobber-flash"/>
     <text x="600" y="215" text-anchor="middle" class="total-num" fill="#fb7185">105</text>
     <text x="470" y="245" class="cache-line" fill="#fb7185">A's 110 overwritten</text>
     <line x1="875" y1="200" x2="752" y2="200" stroke="#fb7185" stroke-width="2.5" marker-end="url(#arrow-red)"/>
-    <text x="770" y="190" class="arrow-label-red">write(105)</text>
-    <rect x="470" y="190" width="120" height="34" rx="6" fill="none" stroke="#fb7185" stroke-width="2" class="clobber-flash"/>
+    <text x="813" y="190" text-anchor="middle" class="arrow-label-red">write(105)</text>
     <text x="600" y="300" text-anchor="middle" class="verdict" fill="#fb7185">LOST UPDATE — final 105, expected 115</text>
   </g>
 
@@ -125,10 +125,10 @@
   <g class="phase phase-3">
     <text x="600" y="215" text-anchor="middle" class="total-num" fill="#5eead4">110</text>
     <text x="470" y="245" class="cache-line" fill="#9095a0">version @ v2 (intact)</text>
-    <line x1="875" y1="190" x2="752" y2="190" stroke="#fb7185" stroke-width="2.5" marker-end="url(#arrow-red)"/>
-    <text x="760" y="180" class="arrow-label-red">write(105) — DENIED</text>
-    <line x1="752" y1="232" x2="875" y2="232" stroke="#5eead4" stroke-width="2.5" marker-end="url(#arrow-accent)"/>
-    <text x="760" y="252" class="arrow-label">reacquire() → 110</text>
+    <line x1="875" y1="192" x2="752" y2="192" stroke="#fb7185" stroke-width="2.5" marker-end="url(#arrow-red)"/>
+    <text x="813" y="181" text-anchor="middle" class="arrow-label-red" style="font-size:12px">write(105) DENIED</text>
+    <line x1="752" y1="236" x2="875" y2="236" stroke="#5eead4" stroke-width="2.5" marker-end="url(#arrow-accent)"/>
+    <text x="813" y="252" text-anchor="middle" class="arrow-label" style="font-size:12px">reacquire() → 110</text>
     <text x="900" y="245" class="cache-line" fill="#5eead4">B: 110 (fresh)</text>
     <text x="600" y="300" text-anchor="middle" class="verdict" fill="#5eead4">stale write denied fail-closed</text>
   </g>
@@ -138,7 +138,7 @@
     <text x="600" y="215" text-anchor="middle" class="total-num" fill="#5eead4">115</text>
     <text x="470" y="245" class="cache-line" fill="#9095a0">version @ v3</text>
     <line x1="875" y1="200" x2="752" y2="200" stroke="#5eead4" stroke-width="2.5" marker-end="url(#arrow-accent)"/>
-    <text x="770" y="190" class="arrow-label">write(115)</text>
+    <text x="813" y="190" text-anchor="middle" class="arrow-label">write(115)</text>
     <g transform="translate(600 295)">
       <circle cx="0" cy="0" r="22" fill="#5eead4" fill-opacity="0.15" stroke="#5eead4" stroke-width="2"/>
       <path d="M-9,-1 L-2,7 L11,-8" fill="none" stroke="#5eead4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
