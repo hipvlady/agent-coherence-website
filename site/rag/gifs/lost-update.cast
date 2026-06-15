@@ -1,0 +1,6 @@
+{"version": 2, "width": 80, "height": 22, "timestamp": 1781527794, "idle_time_limit": 1.2, "command": "cd '/Users/vladparakhin/projects/agent-coherence' && PYTHONWARNINGS=ignore '/Users/vladparakhin/projects/agent-coherence/.venv/bin/python' -m examples.coherent_volume.main 2>/dev/null", "env": {"SHELL": "/bin/zsh"}}
+[0.1, "o", "CoherentVolume \u2014 sequential stale-overwrite (lost-update) demo.\r\nSame read\u2192write sequence both times; only the coordination differs.\r\n\r\n"]
+[0.109, "o", "BROKEN (no coherence) \u2014 sequential stale-overwrite over plain files\r\n  scenario: two agents update a shared total (start=100; A adds 10, B adds 5)\r\n  A wrote 110, then B wrote 105 (from its older read)\r\n"]
+[0.109, "o", "  LOST UPDATE: True  (final=105, expected=115)\r\n\r\n"]
+[1.429, "o", "FIXED (CoherentVolume) \u2014 the stale write is denied, then recovered\r\n  scenario: two agents update a shared total (start=100; A adds 10, B adds 5)\r\n  B's stale write denied: True  (fail-closed)\r\n  B recovered via reacquire(): True\r\n  LOST UPDATE: False  (final=115, expected=115)\r\n\r\nTakeaway: without coherence, B's write from an older read silently\r\noverwrites A (lost update). CoherentVolume denies that write fail-closed,\r\n"]
+[1.429, "o", "B reacquires the current value and rewrites \u2014 both updates survive.\r\n"]
