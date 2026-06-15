@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480" role="img" aria-label="Animated diagram of the shared-record lost update and its prevention. Both agents read a shared total of 100. Agent A adds 10 and writes 110. Without coherence, Agent B writes 105 from its stale read of 100 and silently clobbers A's update — final 105, expected 115. With CoherentVolume, B's stale write is denied fail-closed; B reacquires the current 110 and writes 115. Both updates survive.">
+  <title>agent-coherence — the shared-record lost update, prevented</title>
+  <desc>12-second looping animation. Both agents read a shared total (100). A writes 110. Without coherence, B writes 105 from its stale read and clobbers A (lost update, final 105). With CoherentVolume, B's stale write is denied fail-closed, B reacquires the current 110 and writes 115 — both updates survive.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#131418"/>
+    </linearGradient>
+    <marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5eead4"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#fb7185"/>
+    </marker>
+    <marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9095a0"/>
+    </marker>
+  </defs>
+
+  <style>
+    /* 12s total loop, five frames at 0/20/40/60/80% — step-end so opacity jumps
+       instantly between phases (no fade overlap layering two phases at once).
+       Same technique + pacing as /code/state-transitions.svg. */
+    .phase { opacity: 0; }
+    .phase-0 { animation: phase0 12s step-end infinite; }
+    .phase-1 { animation: phase1 12s step-end infinite; }
+    .phase-2 { animation: phase2 12s step-end infinite; }
+    .phase-3 { animation: phase3 12s step-end infinite; }
+    .phase-4 { animation: phase4 12s step-end infinite; }
+
+    @keyframes phase0 { 0% { opacity: 1; } 20% { opacity: 0; } }
+    @keyframes phase1 { 0% { opacity: 0; } 20% { opacity: 1; } 40% { opacity: 0; } }
+    @keyframes phase2 { 0% { opacity: 0; } 40% { opacity: 1; } 60% { opacity: 0; } }
+    @keyframes phase3 { 0% { opacity: 0; } 60% { opacity: 1; } 80% { opacity: 0; } }
+    @keyframes phase4 { 0% { opacity: 0; } 80% { opacity: 1; } 100% { opacity: 1; } }
+
+    /* Flash on the silent-clobber moment (phase 2 only) */
+    .clobber-flash { animation: clobberFlash 12s step-end infinite; }
+    @keyframes clobberFlash { 0% { opacity: 0; } 40% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 0; } }
+
+    .static { opacity: 1; }
+
+    text {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      fill: #e8e8ea;
+    }
+    .label { font-size: 14px; font-weight: 600; fill: #9095a0; letter-spacing: 0.06em; text-transform: uppercase; }
+    .agent-name { font-size: 22px; font-weight: 700; }
+    .agent-sub { font-size: 14px; font-family: ui-monospace, "SF Mono", Menlo, monospace; fill: #9095a0; }
+    .cache-line { font-size: 18px; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-weight: 600; }
+    .total-num { font-size: 30px; font-weight: 700; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+    .step-label { font-size: 26px; font-weight: 700; fill: #5eead4; }
+    .step-desc { font-size: 18px; fill: #e8e8ea; }
+    .arrow-label { font-size: 14px; font-family: ui-monospace, "SF Mono", Menlo, monospace; fill: #5eead4; }
+    .arrow-label-red { font-size: 14px; font-family: ui-monospace, "SF Mono", Menlo, monospace; fill: #fb7185; }
+    .verdict { font-size: 17px; font-weight: 700; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+    .footer-text { font-size: 16px; fill: #9095a0; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  </style>
+
+  <rect width="1200" height="480" fill="url(#bg)"/>
+
+  <!-- ─── Static structure: two agents + the shared total ────────────────────── -->
+  <g class="static">
+    <rect x="60" y="120" width="260" height="150" rx="12" fill="#131418" stroke="#262830" stroke-width="2"/>
+    <text x="80" y="150" class="label">agent</text>
+    <text x="80" y="182" class="agent-name">Agent A</text>
+    <text x="80" y="210" class="agent-sub">reads, then +10</text>
+  </g>
+
+  <g class="static">
+    <rect x="450" y="130" width="300" height="130" rx="12" fill="#131418" stroke="#262830" stroke-width="2"/>
+    <text x="470" y="160" class="label">CoherentVolume — shared total</text>
+  </g>
+
+  <g class="static">
+    <rect x="880" y="120" width="260" height="150" rx="12" fill="#131418" stroke="#262830" stroke-width="2"/>
+    <text x="900" y="150" class="label">agent</text>
+    <text x="900" y="182" class="agent-name">Agent B</text>
+    <text x="900" y="210" class="agent-sub">reads, then +5</text>
+  </g>
+
+  <!-- ─── Time-step label (animated per phase) ───────────────────────────────── -->
+  <g>
+    <g class="phase phase-0"><text x="60" y="60" class="step-label">t=0</text><text x="120" y="60" class="step-desc">Both agents read the shared total (100).</text></g>
+    <g class="phase phase-1"><text x="60" y="60" class="step-label">t=1</text><text x="120" y="60" class="step-desc">Agent A adds 10 and writes 110.</text></g>
+    <g class="phase phase-2"><text x="60" y="60" class="step-label">t=2</text><text x="120" y="60" class="step-desc" fill="#fb7185">Without coherence: B writes 105 from its stale read — A's 110 is gone.</text></g>
+    <g class="phase phase-3"><text x="60" y="60" class="step-label">t=3</text><text x="120" y="60" class="step-desc">With CoherentVolume: B's stale write is denied; B reacquire()s the current 110.</text></g>
+    <g class="phase phase-4"><text x="60" y="60" class="step-label">✓</text><text x="120" y="60" class="step-desc" fill="#5eead4">B writes 115. Both updates survive — no lost update.</text></g>
+  </g>
+
+  <!-- ─── Phase 0: both read 100 ─────────────────────────────────────────────── -->
+  <g class="phase phase-0">
+    <text x="600" y="215" text-anchor="middle" class="total-num" fill="#5eead4">100</text>
+    <text x="470" y="245" class="cache-line" fill="#9095a0">version @ v1</text>
+    <line x1="450" y1="195" x2="325" y2="195" stroke="#9095a0" stroke-width="2" marker-end="url(#arrow-muted)"/>
+    <text x="335" y="185" class="arrow-label" fill="#9095a0">read → 100</text>
+    <line x1="750" y1="195" x2="875" y2="195" stroke="#9095a0" stroke-width="2" marker-end="url(#arrow-muted)"/>
+    <text x="765" y="185" class="arrow-label" fill="#9095a0">read → 100</text>
+    <text x="80" y="245" class="cache-line" fill="#5eead4">A: 100</text>
+    <text x="900" y="245" class="cache-line" fill="#5eead4">B: 100</text>
+  </g>
+
+  <!-- ─── Phase 1: A writes 110 (v2); B still holds stale 100 ─────────────────── -->
+  <g class="phase phase-1">
+    <text x="600" y="215" text-anchor="middle" class="total-num" fill="#5eead4">110</text>
+    <text x="470" y="245" class="cache-line" fill="#9095a0">version @ v2</text>
+    <line x1="325" y1="200" x2="448" y2="200" stroke="#5eead4" stroke-width="2.5" marker-end="url(#arrow-accent)"/>
+    <text x="335" y="190" class="arrow-label">write(110)</text>
+    <text x="80" y="245" class="cache-line" fill="#9095a0">A: wrote 110</text>
+    <text x="900" y="245" class="cache-line" fill="#fb7185">B: 100 (stale)</text>
+  </g>
+
+  <!-- ─── Phase 2: BROKEN — B writes 105 from stale read, clobbers A ──────────── -->
+  <g class="phase phase-2">
+    <text x="600" y="215" text-anchor="middle" class="total-num" fill="#fb7185">105</text>
+    <text x="470" y="245" class="cache-line" fill="#fb7185">A's 110 overwritten</text>
+    <line x1="875" y1="200" x2="752" y2="200" stroke="#fb7185" stroke-width="2.5" marker-end="url(#arrow-red)"/>
+    <text x="770" y="190" class="arrow-label-red">write(105)</text>
+    <rect x="470" y="190" width="120" height="34" rx="6" fill="none" stroke="#fb7185" stroke-width="2" class="clobber-flash"/>
+    <text x="600" y="300" text-anchor="middle" class="verdict" fill="#fb7185">LOST UPDATE — final 105, expected 115</text>
+  </g>
+
+  <!-- ─── Phase 3: FIXED — stale write denied, B reacquire()s the current 110 ─── -->
+  <g class="phase phase-3">
+    <text x="600" y="215" text-anchor="middle" class="total-num" fill="#5eead4">110</text>
+    <text x="470" y="245" class="cache-line" fill="#9095a0">version @ v2 (intact)</text>
+    <line x1="875" y1="190" x2="752" y2="190" stroke="#fb7185" stroke-width="2.5" marker-end="url(#arrow-red)"/>
+    <text x="760" y="180" class="arrow-label-red">write(105) — DENIED</text>
+    <line x1="752" y1="232" x2="875" y2="232" stroke="#5eead4" stroke-width="2.5" marker-end="url(#arrow-accent)"/>
+    <text x="760" y="252" class="arrow-label">reacquire() → 110</text>
+    <text x="900" y="245" class="cache-line" fill="#5eead4">B: 110 (fresh)</text>
+    <text x="600" y="300" text-anchor="middle" class="verdict" fill="#5eead4">stale write denied fail-closed</text>
+  </g>
+
+  <!-- ─── Phase 4: B writes 115 — both updates survive ───────────────────────── -->
+  <g class="phase phase-4">
+    <text x="600" y="215" text-anchor="middle" class="total-num" fill="#5eead4">115</text>
+    <text x="470" y="245" class="cache-line" fill="#9095a0">version @ v3</text>
+    <line x1="875" y1="200" x2="752" y2="200" stroke="#5eead4" stroke-width="2.5" marker-end="url(#arrow-accent)"/>
+    <text x="770" y="190" class="arrow-label">write(115)</text>
+    <g transform="translate(600 295)">
+      <circle cx="0" cy="0" r="22" fill="#5eead4" fill-opacity="0.15" stroke="#5eead4" stroke-width="2"/>
+      <path d="M-9,-1 L-2,7 L11,-8" fill="none" stroke="#5eead4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <text x="600" y="345" text-anchor="middle" class="verdict" fill="#5eead4">no lost update — final 115 = expected 115</text>
+  </g>
+
+  <!-- ─── Footer ─────────────────────────────────────────────────────────────── -->
+  <g class="static">
+    <line x1="60" y1="395" x2="1140" y2="395" stroke="#262830" stroke-width="1"/>
+    <text x="60" y="423" class="footer-text">CoherentVolume · single-writer per record · stale write denied fail-closed, not silently applied</text>
+    <text x="60" y="450" class="footer-text" fill="#5eead4">agent-coherence.dev/rag</text>
+  </g>
+</svg>
