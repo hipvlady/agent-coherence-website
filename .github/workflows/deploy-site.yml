@@ -71,9 +71,16 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Notify IndexNow (Bing, Yandex, Seznam, Naver)
+      - name: Notify IndexNow via Bing (Yandex excluded per compliance policy)
+        # Submit to Bing's own IndexNow endpoint rather than the shared
+        # api.indexnow.org pool, so our direct outbound goes only to
+        # Microsoft. IndexNow is a consortium protocol, so a participating
+        # engine MAY still redistribute downstream — but Yandex is blocked
+        # from indexing at the authoritative layer (robots.txt Disallow for
+        # User-agent: Yandex), which is the decisive control regardless of
+        # any IndexNow notification it receives.
         run: |
-          curl -fsS -X POST "https://api.indexnow.org/IndexNow" \
+          curl -fsS -X POST "https://www.bing.com/indexnow" \
             -H "Content-Type: application/json; charset=utf-8" \
             -d '{
               "host": "agent-coherence.dev",

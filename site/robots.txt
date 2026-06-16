@@ -1,5 +1,6 @@
 # agent-coherence.dev — public marketing site for the agent-coherence OSS project.
-# Discovery and AI indexing are encouraged. All major crawlers explicitly allowed.
+# Discovery and AI indexing are encouraged. All major crawlers explicitly allowed,
+# EXCEPT Yandex (disallowed below — Russia-affiliated; excluded per compliance policy).
 
 User-agent: *
 Allow: /
@@ -17,8 +18,13 @@ Allow: /
 User-agent: Slurp
 Allow: /
 
+# Yandex (Russia-affiliated) — excluded from indexing per compliance policy.
+# "User-agent: Yandex" addresses the entire Yandex robot family per their docs.
 User-agent: Yandex
-Allow: /
+Disallow: /
+
+User-agent: YandexBot
+Disallow: /
 
 User-agent: Baiduspider
 Allow: /
