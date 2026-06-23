@@ -1097,6 +1097,8 @@ graph = builder.compile(store=store)</pre>
         <li><span class="tag">Supply chain</span>PyPI Trusted Publishers (OIDC), PEP 740 attestations, CycloneDX SBOM</li>
         <li><span class="tag">Diagnose</span><code>ccs-diagnose</code> — zero-network stale-read detector for existing graphs</li>
         <li><span class="tag">Recovery</span>Crash-recovery sweep reclaims stale grants when agents OOM-kill or livelock</li>
+        <li><span class="tag">Foreign edits</span>v0.10.0 catches a managed file edited out-of-band (human, script, or off-coordinator tool) at the next read and write — surfaced as <code>StaleView</code>, recovered via <code>reacquire()</code></li>
+        <li><span class="tag">MCP</span><code>stale-write-guard-fs</code> — a stdio MCP server (<code>pip install "agent-coherence[mcp]"</code>) exposing the coordinator to any MCP client over five tools</li>
       </ul>
     </div>
   </section>

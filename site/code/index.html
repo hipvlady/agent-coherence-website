@@ -860,6 +860,8 @@ graph = builder.compile(store=store)
 
       <p>The same protocol works on CrewAI and AutoGen via their adapters, and on custom orchestrators via <code>CoherenceAdapterCore</code>. Vendor-neutral across Anthropic, OpenAI, Google, Mistral, and open-source models — the protocol operates on artifacts, not model responses.</p>
 
+      <p style="margin-top: 16px;">Two more surfaces shipped in <strong style="color: var(--text);">v0.10.0</strong>. When a developer or a tool edits a shared file <em>out of band</em> — outside the coordinator — that foreign edit is now caught the moment an agent re-reads it (denied in strict mode) or writes over it (denied by default), surfaced as <code>StaleView</code> and cleared with <code>reacquire()</code>. And if your agents are MCP clients, <code>stale-write-guard-fs</code> (<code>pip install "agent-coherence[mcp]"</code>) exposes the same coordinator over stdio — five tools (<code>swg_read</code>, <code>swg_write</code>, <code>swg_reacquire</code>, <code>swg_write_cas</code>, <code>swg_status</code>) — no orchestrator required.</p>
+
       <h3 style="margin: 36px 0 12px; font-size: 1.18rem; letter-spacing: -0.01em;">Two adoption tiers.</h3>
       <p>Pick where on the commitment curve you want to start.</p>
       <div class="tier-table">

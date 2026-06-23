@@ -22,10 +22,11 @@ The two fixes don't compete. Moving config-able rules to `permissions.deny` is h
 
 ## The library — what it does
 
-- **Detects stale reads.** When agent B reads an artifact after agent A has modified it, agent-coherence flags the stale read instead of silently serving outdated data. Most frameworks have no such mechanism; LangGraph's BaseStore documentation explicitly states it "does not natively support optimistic locking, vector versioning, or invalidation protocols."
+- **Detects stale reads.** When agent B reads an artifact after agent A has modified it, agent-coherence flags the stale read instead of silently serving outdated data. As of **v0.10.0** this extends to **foreign edits**: a managed file changed out-of-band by a human, script, or tool not on the coordinator is caught when an agent re-reads it (denied in strict mode; opt-in via `CoherentVolume(on_stale_read="raise")`) — surfaced as `StaleView`, recovered via `reacquire()`. Most frameworks have no such mechanism; LangGraph's BaseStore documentation explicitly states it "does not natively support optimistic locking, vector versioning, or invalidation protocols."
 - **Serves the current version on the next read.** Rather than broadcasting the full artifact to every agent on every turn (the default in CrewAI, AutoGen, and most LangGraph patterns), agent-coherence sends ~12-token invalidation signals when state changes and only re-fetches on the next read.
-- **Enforces single-writer ordering — no silent lost updates on a single host.** Actor A reads v1, actor B commits v2, A then writes: A's write is denied (its cache went INVALID on B's commit) and A must re-read — the lost update is prevented, not silently applied. This holds for **both sequential and concurrent writers on a single host** — the concurrent same-key race is resolved by an optimistic commit-CAS plus fencing, so the loser gets a typed conflict and retries, never a silent drop. **Coordinating writers across multiple hosts is on the roadmap.** Single-writer is enforced by invalidation, not by an append-only reducer that produces duplicates or unexpected list nesting.
+- **Enforces single-writer ordering — no silent lost updates on a single host.** Actor A reads v1, actor B commits v2, A then writes: A's write is denied (its cache went INVALID on B's commit) and A must re-read — the lost update is prevented, not silently applied. This holds for **both sequential and concurrent writers on a single host** — the concurrent same-key race is resolved by an optimistic commit-CAS plus fencing, so the loser gets a typed conflict and retries, never a silent drop. As of **v0.10.0**, a `CoherentVolume.write()` over a managed file that was edited out-of-band (a foreign edit the coordinator never saw) is also denied by default (`on_stale_write="raise"`), surfaced as `StaleView` and recovered via `reacquire()`. **Coordinating writers across multiple hosts is on the roadmap.** Single-writer is enforced by invalidation, not by an append-only reducer that produces duplicates or unexpected list nesting.
 - **Records what each agent saw.** Per-agent content-audit log with SHA-256 hashes per read, plus a sequence-numbered state-transition log. The data substrate for run replay and stale-read forensics.
+- **Exposes the coordinator over MCP (v0.10.0).** `stale-write-guard-fs` is a stdio MCP server (`pip install "agent-coherence[mcp]"`) that gives any MCP client the same protocol over five tools — `swg_read`, `swg_write`, `swg_reacquire`, `swg_write_cas` (single-shot version-checked CAS), and `swg_status`.
 
 ## The plugin — what it does
 
@@ -148,13 +149,21 @@ pip install "agent-coherence[crewai]"
 pip install "agent-coherence[autogen]"
 ```
 
+**MCP server** (`stale-write-guard-fs`, v0.10.0) — exposes the coordinator to any MCP client over stdio:
+
+```
+pip install "agent-coherence[mcp]"
+```
+
+Five tools: `swg_read`, `swg_write`, `swg_reacquire`, `swg_write_cas` (single-shot version-checked CAS), and `swg_status`.
+
 **Plugin** (Claude Code). Two steps — the Python coordinator + hook client come from PyPI; the Claude Code plugin metadata and hook wiring come from the marketplace:
 
 ```
 # Step 1 — Python coordinator + hook client (PyPI stable; the 0.8.0a1
 #   pre-release alias is no longer needed since v0.8.0 stable shipped
-#   2026-05-23). Warn mode works against v0.8.0+; strict mode (v0.2)
-#   requires v0.9.0 once published.
+#   2026-05-23). Warn mode works against v0.8.0+; strict mode (plugin v0.2)
+#   requires the library's v0.9.0+ coordinator (current: v0.10.0).
 pip install "agent-coherence>=0.8.0"
 
 # Step 2 — Claude Code plugin
@@ -245,8 +254,8 @@ RAG corpora and agent memory are shared mutable state — so the write-side lost
 
 - **Drop-in for memory/RAG stores.** `CCSStore` is a drop-in for `langgraph.store` (`get`/`put`/`search` unchanged) and composes with Mem0, Letta, LlamaIndex, a vector store, or a plain file. It does not embed, rank, or store vectors — it's the consistency layer underneath whatever you already use to retrieve and remember.
 - **Runnable, deterministic demo (offline, no keys).** `python -m examples.coherent_volume.main` reproduces the documented lost update and then prevents it: the BROKEN run loses the update; the FIXED run denies the stale write fail-closed, reacquires, and both updates survive. A terminal recording of it is on the /rag page.
-- **Honest scope — not shipped yet.** Writes that go through the coordinator (a peer agent, another session, your store via `CCSStore`/`CoherentVolume`) are caught. **Auto-watching an unmanaged external source** that changes with no coordinator write (a user hand-editing the raw file, an out-of-band re-index) is the source-watcher case — **on the roadmap, demand-gated, not shipped today.** The clean, shipped guarantee is the sequential stale-read→write lost update on a single host.
-- **Cost dimension (TC-1).** A separate, pre-registered temporal-cost benchmark measures how many re-fetches coherence-gating avoids as a source drifts between turns. The metric is re-fetches-avoided — a proxy, reproducible from committed code in the repo, **not** a token/dollar invoice — kept as a repo artifact rather than a headline number (`benchmarks/cost_preregistration.md`, shipped in `v0.9.3`).
+- **Honest scope.** Writes that go through the coordinator (a peer agent, another session, your store via `CCSStore`/`CoherentVolume`) are caught. As of **v0.10.0**, a *managed* file edited out-of-band — by a human, a script, or a tool not on the coordinator — is also caught at the agent's next access: on **re-read** (denied in strict mode; opt-in client surface `CoherentVolume(on_stale_read="raise")`) and on **write-over** (default-on, `on_stale_write="raise"`). Both surface as `StaleView`; recover via `reacquire()`. This is detection at the read/write boundary, not a background watcher — **proactively auto-watching an unmanaged source** that no agent reads or writes (an out-of-band re-index of a file outside the managed set) is still the source-watcher case, on the roadmap. The clean, shipped guarantee is the sequential stale-read→write lost update on a single host.
+- **Cost dimension (TC-1).** A separate, pre-registered temporal-cost benchmark measures how many re-fetches coherence-gating avoids as a source drifts between turns. The metric is re-fetches-avoided — a proxy, reproducible from committed code in the repo, **not** a token/dollar invoice — kept as a repo artifact rather than a headline number (`benchmarks/cost_preregistration.md`, shipped in `v0.9.3`, current in `v0.10.0`).
 
 ## The coordination invariant
 
